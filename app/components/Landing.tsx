@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from 'next/image';
 import hero from "../images/hero.jpg"
+import { FaGoogle } from 'react-icons/fa';
+
 
 export function Landing() {
   const { data: session } = useSession();
@@ -81,7 +83,7 @@ export function Landing() {
                       onClick={() => signIn("google")}
                       className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-[#FF6B6B]/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
                     >
-                      <ChromeIcon className="h-4 w-4 mr-2" />
+                      <FaGoogle className="h-4 w-4 mr-2" />
                       Sign Up with Google
                     </Button>
                   )}
