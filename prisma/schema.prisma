@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String   @id @default(uuid())
+  email    String   @unique
+  provider Provider
+  streams  Stream[] @relation("UserStreams")
+  upvotes  Upvote[] @relation("UserUpvotes")
+}
+
+enum Provider {
+  Google
+}
+
+model Stream {
+  id          String     @id @default(uuid())
+  type        StreamType
+  url         String
+  extractedId String
+  active      Boolean    @default(true)
+  userId      String
+  user        User       @relation("UserStreams", fields: [userId], references: [id])
+  upvotes     Upvote[]   @relation("StreamUpvotes")
+}
+
+enum StreamType {
+  Spotify
+  YouTube
+}
+
+model Upvote {
+  id       String @id @default(uuid())
+  userId   String
+  streamId String
+  user     User   @relation("UserUpvotes", fields: [userId], references: [id])
+  stream   Stream @relation("StreamUpvotes", fields: [streamId], references: [id])
+
+  @@unique([userId, streamId]) // Ensures that a user can upvote a stream only once
+}
