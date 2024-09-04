@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prismaClient } from '@/app/lib/db';
 import { z } from 'zod';
 import { StreamType } from '@prisma/client';
+import { getServerSession } from "next-auth/next";
+
+
 
 // Input validation schema
 const streamSchema = z.object({
@@ -38,6 +41,13 @@ const getStreamTypeAndId = (url: string): { type: StreamType; extractedId: strin
 };
 
 export async function POST(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session) {
+    return NextResponse.json(
+      { message: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
   try {
     // Parse the request body
     const body = await req.json();
@@ -58,6 +68,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+
     // Create stream
     const stream = await prismaClient.stream.create({
       data: {
@@ -68,7 +79,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(stream, { status: 201 });
+    return NextResponse.json({
+      message: "Added stream",
+      id: stream.id
+    }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -86,13 +100,21 @@ export async function POST(req: NextRequest) {
 
 // Define Zod schema for validating query parameters
 const querySchema = z.object({
-  creatorId: z.string().uuid(),
+  creatorId: z.string(),
 });
 
 export async function GET(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session) {
+    return NextResponse.json(
+      { message: 'Unauthorized' },
+      { status: 401 }
+    );
+  }
   try {
     // Extract query parameters from the request
     const url = new URL(req.url);
+    console.log(url)
     const creatorId = url.searchParams.get('creatorId');
 
     if (!creatorId) {

@@ -1,14 +1,92 @@
 /**
  * v0 by Vercel.
- * @see https://v0.dev/t/Fsdvz4fyhNO
+ * @see https://v0.dev/t/ZO7aiVtGeHq
  * Documentation: https://v0.dev/docs#integrating-generated-code-into-your-nextjs-app
  */
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
+import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useSession } from "next-auth/react"
+import axios from 'axios';
+import { useRouter } from "next/navigation"
+
 
 export function Space() {
+  const router = useRouter();
+
+  const [songs, setSongs] = useState([
+    {
+      title: "Bandey",
+      artist: "The Local Train",
+      upvotes: 15,
+    },
+    {
+      title: "Alag Asmaan",
+      artist: "Anuv Jain",
+      upvotes: 10,
+    },
+    {
+      title: "Somebody's me",
+      artist: "Enrique Iglesias",
+      upvotes: 8,
+    },
+  ])
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    const fetchSongs = async () => {
+      if (status === 'authenticated') {
+        try {
+          const response = await axios.get('/api/streams/my',
+          //    {
+          //   headers: {
+          //     'Authorization': `Bearer ${session.}`, // Adjust if needed
+          //   },
+          // }
+        );
+          setSongs(response.data);
+        } catch (error) {
+          console.error('Error fetching songs:', error);
+        }
+      } else if (status === 'unauthenticated') {
+        router.push('/'); // Prompt user to sign in if not authenticated
+      }
+    };
+
+    fetchSongs();
+  }, [status, session]);
+  const [newSongUrl, setNewSongUrl] = useState("")
+  const handleUpvote = (index:number) => {
+    const updatedSongs = [...songs]
+    updatedSongs[index].upvotes++
+    updatedSongs.sort((a, b) => b.upvotes - a.upvotes)
+    setSongs(updatedSongs)
+  }
+  const handleDownvote = (index:number) => {
+    const updatedSongs = [...songs]
+    updatedSongs[index].upvotes--
+    updatedSongs.sort((a, b) => b.upvotes - a.upvotes)
+    setSongs(updatedSongs)
+  }
+  const handleAddToQueue = () => {
+    if (newSongUrl.trim() !== "") {
+      const newSong = {
+        title: "New Song",
+        artist: "New Artist",
+        upvotes: 0,
+      }
+      setSongs([...songs,newSong])
+      setNewSongUrl("")
+    }
+  }
+  const handleShare = () => {
+    console.log("Sharing the page...")
+  }
   return (
     <div className="flex flex-col min-h-[100dvh] bg-gradient-to-r from-[#4a90e2] to-[#8e44ad] text-white">
       <header className="px-4 lg:px-6 h-14 flex items-center bg-[#e0e0e0] border-b">
@@ -26,9 +104,9 @@ export function Space() {
           <Button variant="ghost" className="px-4 py-2 rounded-md hover:bg-[#d0d0d0]/10">
             Settings
           </Button>
-          <Button variant="outline" className="px-4 py-2 rounded-md border-[#4a90e2] text-[#4a90e2]">
-            <LogInIcon className="h-4 w-4 mr-2 fill-[#4a90e2]" />
-            Login
+          <Button variant="outline" className="px-4 py-2 rounded-md border-[#c5335f] text-[#ff3333]">
+            <LogInIcon className="h-4 w-4 mr-2 fill-[#d72f86]" />
+            Log Out
           </Button>
         </nav>
       </header>
@@ -66,56 +144,42 @@ export function Space() {
               <Volume2Icon className="h-6 w-6 fill-[#4a90e2]" />
             </Button>
           </div>
+          <div className="flex items-center gap-4">
+            <Input
+              type="text"
+              placeholder="Add song URL"
+              value={newSongUrl}
+              onChange={(e) => setNewSongUrl(e.target.value)}
+              className="flex-1 rounded-md border-[#4a90e2] text-[#333333] px-4 py-2"
+            />
+            <Button onClick={handleAddToQueue} className="px-4 py-2 rounded-md border-[#4a90e2] text-[#4a90e2]">
+              Add to queue
+            </Button>
+          </div>
         </div>
         <div className="flex flex-col gap-4 overflow-auto max-h-[80vh]">
           <ScrollArea className="flex-1">
             <div className="grid gap-4">
-              <div className="flex items-center justify-between bg-gradient-to-r from-[#4a90e2] to-[#8e44ad] rounded-md p-4">
-                <div>
-                  <h4 className="text-lg font-bold text-white">Song Title</h4>
-                  <p className="text-[#d0d0d0]">Artist Name</p>
+              {songs.map((song, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-gradient-to-r from-[#4a90e2] to-[#8e44ad] rounded-md p-4"
+                >
+                  <div>
+                    <h4 className="text-lg font-bold text-white">{song.title}</h4>
+                    <p className="text-[#d0d0d0]">{song.artist}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[#d0d0d0]">{song.upvotes} Upvotes</span>
+                    <Button variant="ghost" size="icon" onClick={() => handleUpvote(index)}>
+                      <ArrowUpIcon className="h-4 w-4 fill-white" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => handleDownvote(index)}>
+                      <ArrowDownIcon className="h-4 w-4 fill-white" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[#d0d0d0]">10 Upvotes</span>
-                  <Button variant="ghost" size="icon">
-                    <ArrowUpIcon className="h-4 w-4 fill-white" />
-                  </Button>
-                  <Button variant="ghost" size="icon">
-                    <ArrowDownIcon className="h-4 w-4 fill-white" />
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="flex items-center justify-between bg-gradient-to-r from-[#4a90e2] to-[#8e44ad] rounded-md p-4">
-                <div>
-                  <h4 className="text-lg font-bold text-white">Song Title</h4>
-                  <p className="text-[#d0d0d0]">Artist Name</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[#d0d0d0]">15 Upvotes</span>
-                  <Button variant="ghost" size="icon">
-                    <ArrowUpIcon className="h-4 w-4 fill-white" />
-                  </Button>
-                  <Button variant="ghost" size="icon">
-                    <ArrowDownIcon className="h-4 w-4 fill-white" />
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-center justify-between bg-gradient-to-r from-[#4a90e2] to-[#8e44ad] rounded-md p-4">
-                <div>
-                  <h4 className="text-lg font-bold text-white">Song Title</h4>
-                  <p className="text-[#d0d0d0]">Artist Name</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[#d0d0d0]">8 Upvotes</span>
-                  <Button variant="ghost" size="icon">
-                    <ArrowUpIcon className="h-4 w-4 fill-white" />
-                  </Button>
-                  <Button variant="ghost" size="icon">
-                    <ArrowDownIcon className="h-4 w-4 fill-white" />
-                  </Button>
-                </div>
-              </div>
+              ))}
             </div>
           </ScrollArea>
         </div>
@@ -129,6 +193,10 @@ export function Space() {
           <Link href="#" className="text-xs hover:underline underline-offset-4 text-[#4a90e2]" prefetch={false}>
             Privacy
           </Link>
+          <Button variant="ghost" size="sm" onClick={handleShare}>
+            <ShareIcon className="h-6 w-6 fill-[#4a90e2]" />
+            <span className="sr-only">Share</span>
+          </Button>
         </nav>
       </footer>
     </div>
@@ -277,6 +345,28 @@ function RewindIcon(props: React.SVGProps<SVGSVGElement>) {
     >
       <polygon points="11 19 2 12 11 5 11 19" />
       <polygon points="22 19 13 12 22 5 22 19" />
+    </svg>
+  )
+}
+
+
+function ShareIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+      <polyline points="16 6 12 2 8 6" />
+      <line x1="12" x2="12" y1="2" y2="15" />
     </svg>
   )
 }

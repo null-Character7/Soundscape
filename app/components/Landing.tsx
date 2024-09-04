@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import Image from 'next/image';
 import hero from "../images/hero.jpg"
 import { FaGoogle } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
 
 
 export function Landing() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-background text-foreground">
@@ -78,23 +80,32 @@ export function Landing() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  {!session?.user && (
-                    <Button
-                      onClick={() => signIn("google")}
-                      className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-[#FF6B6B]/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                    >
-                      <FaGoogle className="h-4 w-4 mr-2" />
-                      Sign Up with Google
-                    </Button>
-                  )}
+  {!session?.user && (
+    <Button
+      onClick={() => signIn("google")}
+      className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-[#FF6B6B]/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+    >
+      <FaGoogle className="h-4 w-4 mr-2" />
+      Sign Up with Google
+    </Button>
+  )}
 
-                  <Button
-                    variant="outline"
-                    className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-muted px-8 text-sm font-medium shadow-sm text-black transition-colors hover:bg-muted-foreground/10 hover:text-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                  >
-                    Learn More
-                  </Button>
-                </div>
+  {session?.user && (
+    <Button
+    onClick={() => router.push('/streams')} // Assuming you have a route for "stream"
+      className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-muted px-8 text-sm font-medium shadow-sm text-black transition-colors hover:bg-muted-foreground/10 hover:text-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+    >
+      Go to My Space
+    </Button>
+  )}
+
+  <Button
+    variant="outline"
+    className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-muted px-8 text-sm font-medium shadow-sm text-black transition-colors hover:bg-muted-foreground/10 hover:text-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+  >
+    Learn More
+  </Button>
+</div>
               </div>
               <div className="flex justify-center">
                 <Image
