@@ -41,15 +41,30 @@ export async function GET(req: NextRequest) {
 
     // Fetch the streams for the authenticated user
     const streams = await prismaClient.stream.findMany({
-        where: { userId },
-        include: {
-          _count: {
-            select: { upvotes: true }
-          }
-        }
-      });
-
-    return NextResponse.json(streams, { status: 200 });
+      where: { userId },
+      include: {
+        _count: {
+          select: { upvotes: true },
+        },
+        upvotes: {
+          where: {
+            userId: user.id, // Assuming you have user information available
+          },
+          select: {
+            id: true, // Or any specific fields you want from upvotes
+          },
+        },
+      },
+    });
+    
+    return NextResponse.json({
+      streams: streams.map((stream) => ({
+        ...stream,
+        upvoteCount: stream._count.upvotes,
+        hasUserUpvoted: stream.upvotes.length > 0, // To check if the logged-in user has upvoted
+      })),
+    }, { status: 200 });
+    
   } catch (error) {
     console.error('Error fetching streams:', error);
     return NextResponse.json(

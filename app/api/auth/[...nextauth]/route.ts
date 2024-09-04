@@ -1,8 +1,17 @@
-import NextAuth from "next-auth";
+import NextAuth, {type DefaultSession } from "next-auth"
 import GoogleProvider from "next-auth/providers/google";
-import { PrismaClient } from "@prisma/client";
+import { prismaClient } from "@/app/lib/db";
 
-const prisma = new PrismaClient();
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string; // Add id to the user object in the session
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    };
+  }
+}
 
 const handler = NextAuth({
   providers: [
@@ -23,13 +32,13 @@ const handler = NextAuth({
         if(!user.email){
           return false;
         }
-        const existingUser = await prisma.user.findUnique({
+        const existingUser = await prismaClient.user.findUnique({
           where: { email: user.email },
         });
 
         if (!existingUser) {
           // If user does not exist, create a new user
-          await prisma.user.create({
+          await prismaClient.user.create({
             data: {
               id: user.id,
               email: user.email,
@@ -46,6 +55,35 @@ const handler = NextAuth({
         return false; // Deny sign-in on error
       }
     },
+    async session({ session, token }) {
+      try {
+        // Fetch the user from the database based on their email
+        const dbUser = await prismaClient.user.findUnique({
+          where: {
+            email: session.user?.email as string,
+          },
+        });
+    
+        // If the user exists in the database, add their ID to the session
+        if (dbUser) {
+          return {
+            ...session,
+            user: {
+              ...session.user,
+              id: dbUser.id,
+            },
+          };
+        }
+    
+        // Return the session as is if the user does not exist
+        return session;
+      } catch (error) {
+        console.error('Error fetching user from the database:', error);
+        // Return the session as is if there's an error
+        return session;
+      }
+    },
+    
   },
 });
 

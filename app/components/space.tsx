@@ -16,23 +16,23 @@ import axios from 'axios';
 import { useRouter } from "next/navigation"
 
 
-export function Space() {
+export function Space({creatorId}:any) {
   const router = useRouter();
-
+  const [newSongUrl, setNewSongUrl] = useState<string>('');
   const [songs, setSongs] = useState([
     {
+      streamId:"100",
       title: "Bandey",
-      artist: "The Local Train",
       upvotes: 15,
     },
     {
+      streamId:"101",
       title: "Alag Asmaan",
-      artist: "Anuv Jain",
       upvotes: 10,
     },
     {
+      streamId:"102",
       title: "Somebody's me",
-      artist: "Enrique Iglesias",
       upvotes: 8,
     },
   ])
@@ -42,14 +42,10 @@ export function Space() {
     const fetchSongs = async () => {
       if (status === 'authenticated') {
         try {
-          const response = await axios.get('/api/streams/my',
-          //    {
-          //   headers: {
-          //     'Authorization': `Bearer ${session.}`, // Adjust if needed
-          //   },
-          // }
-        );
-          setSongs(response.data);
+          const response = await axios.get('/api/streams/my', {
+            withCredentials: true
+        });
+        console.log(response);
         } catch (error) {
           console.error('Error fetching songs:', error);
         }
@@ -60,33 +56,87 @@ export function Space() {
 
     fetchSongs();
   }, [status, session]);
-  const [newSongUrl, setNewSongUrl] = useState("")
-  const handleUpvote = (index:number) => {
+  // const [newSongUrl, setNewSongUrl] = useState("")
+  const handleUpvote = async (index:number) => {
+    console.log(songs[index])
+    const songId = songs[index].streamId; // Ensure that songs[index] has an 'id' property
+
+  try {
+    const response = await axios.post('/api/streams/upvote', {
+      streamId: songId, // Include the song's ID in the request body
+    }, {
+      withCredentials: true // Ensure credentials are sent with the request
+    });
+
+    console.log("Upvote response:", response.data);
     const updatedSongs = [...songs]
     updatedSongs[index].upvotes++
     updatedSongs.sort((a, b) => b.upvotes - a.upvotes)
     setSongs(updatedSongs)
+  } catch (error) {
+    console.error("Error upvoting song:", error);
   }
-  const handleDownvote = (index:number) => {
-    const updatedSongs = [...songs]
-    updatedSongs[index].upvotes--
-    updatedSongs.sort((a, b) => b.upvotes - a.upvotes)
-    setSongs(updatedSongs)
+    
   }
-  const handleAddToQueue = () => {
-    if (newSongUrl.trim() !== "") {
-      const newSong = {
-        title: "New Song",
-        artist: "New Artist",
-        upvotes: 0,
+  const handleDownvote = async (index:number) => {
+    const songId = songs[index].streamId; // Ensure that songs[index] has a 'streamId' property
+  
+    try {
+      const response = await axios.post('/api/streams/downvote', {
+        streamId: songId, // Include the song's ID in the request body
+      }, {
+        withCredentials: true // Ensure credentials are sent with the request
+      });
+  
+      console.log("Downvote response:", response.data);
+  
+      // Update the local state to reflect the new upvote count
+      const updatedSongs = [...songs];
+      if (updatedSongs[index].upvotes > 0) {
+        updatedSongs[index].upvotes--;
       }
-      setSongs([...songs,newSong])
+      updatedSongs.sort((a, b) => b.upvotes - a.upvotes);
+      setSongs(updatedSongs);
+    } catch (error) {
+      console.error("Error downvoting song:", error);
+    }
+  };
+  
+  const handleAddToQueue = async () => {
+    if (newSongUrl.trim() !== "") {
+      console.log("Song url ",newSongUrl)
+      try {
+        const response = await axios.post('/api/streams', {
+          userId: creatorId, // Replace with the actual user ID variable
+          url: newSongUrl,            // Replace with the actual URL or the value you want to send
+        }, {
+          withCredentials: true       // This ensures that credentials (such as cookies) are sent along with the request
+        });
+      
+        // Handle the response or update the state as needed
+        console.log("Stream added:", response.data);
+        const newStream=response.data.stream;
+        setSongs(prevSongs => [
+          ...prevSongs,
+          {
+            streamId: newStream.id, // Use the ID from the response
+            title: newStream.title, // Use the title from the response
+            upvotes: 0, // Initialize upvotes to 0
+          }
+        ]);
+        console.log(songs)
+      
+      } catch (error) {
+        // Handle any errors that occur during the async operation
+        console.error("Error adding stream:", error);
+      }
+      
       setNewSongUrl("")
     }
   }
-  const handleShare = () => {
-    console.log("Sharing the page...")
-  }
+  // const handleShare = () => {
+  //   console.log("Sharing the page...")
+  // }
   return (
     <div className="flex flex-col min-h-[100dvh] bg-gradient-to-r from-[#4a90e2] to-[#8e44ad] text-white">
       <header className="px-4 lg:px-6 h-14 flex items-center bg-[#e0e0e0] border-b">
@@ -167,7 +217,7 @@ export function Space() {
                 >
                   <div>
                     <h4 className="text-lg font-bold text-white">{song.title}</h4>
-                    <p className="text-[#d0d0d0]">{song.artist}</p>
+                    {/* <p className="text-[#d0d0d0]">{song.artist}</p> */}
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-[#d0d0d0]">{song.upvotes} Upvotes</span>
@@ -193,10 +243,10 @@ export function Space() {
           <Link href="#" className="text-xs hover:underline underline-offset-4 text-[#4a90e2]" prefetch={false}>
             Privacy
           </Link>
-          <Button variant="ghost" size="sm" onClick={handleShare}>
+          {/* <Button variant="ghost" size="sm" onClick={handleShare}>
             <ShareIcon className="h-6 w-6 fill-[#4a90e2]" />
             <span className="sr-only">Share</span>
-          </Button>
+          </Button> */}
         </nav>
       </footer>
     </div>

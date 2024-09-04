@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
     // Create stream
     const stream = await prismaClient.stream.create({
       data: {
+        title:"BEST SONG",
         type,
         url,
         extractedId,
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       message: "Added stream",
-      id: stream.id
+      stream
     }, { status: 201 });
   } catch (error) {
     if (error instanceof z.ZodError) {
