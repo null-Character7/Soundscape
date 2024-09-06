@@ -13,6 +13,17 @@ import { useRouter } from 'next/navigation';
 export function Landing() {
   const { data: session } = useSession();
   const router = useRouter();
+  const handleRedirect = () => {
+    const userId = session?.user?.id; // Extract userId from the session
+
+    if (userId) {
+      // Redirect to /streams/userId
+      console.log(userId);
+      router.push(`/streams/${userId}`);
+    } else {
+      console.error('User is not logged in');
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-background text-foreground">
@@ -92,7 +103,7 @@ export function Landing() {
 
   {session?.user && (
     <Button
-    onClick={() => router.push('/streams')} // Assuming you have a route for "stream"
+    onClick={handleRedirect} // Assuming you have a route for "stream"
       className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-muted px-8 text-sm font-medium shadow-sm text-black transition-colors hover:bg-muted-foreground/10 hover:text-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
     >
       Go to My Space

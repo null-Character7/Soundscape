@@ -12,10 +12,10 @@ import { useRouter } from "next/navigation";
 import { PauseIcon } from './Icons';
 import YouTube, { YouTubePlayer } from 'react-youtube';
 
-// interface SpaceProps {
-//   creatorId: string;
-//   isPlaying?: boolean; // Optional prop to indicate if a song is playing
-// }
+import { useCallback } from 'react';
+
+
+
 
 
 
@@ -23,6 +23,31 @@ import YouTube, { YouTubePlayer } from 'react-youtube';
 
 export function Space({ creatorId }: any) {
   const playerRef = useRef<YouTubePlayer | null>(null); // YouTube player reference
+
+  // Simple hash function (for demonstration purposes)
+  function hashCreatorId(creatorId: string): string {
+    // let hash = 0;
+    // for (let i = 0; i < creatorId.length; i++) {
+    //   const char = creatorId.charCodeAt(i);
+    //   hash = (hash << 5) - hash + char;
+    //   hash |= 0; // Convert to 32bit integer
+    // }
+    // return Math.abs(hash).toString();
+    return creatorId;
+  }
+
+  // Function to handle copying the link
+  const handleShare = useCallback(() => {
+    const link = `http://localhost:3000/streams/${hashCreatorId(creatorId)}`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(link).then(() => {
+      console.log("Link copied to clipboard:", link);
+      // You can add a toast or feedback message here if you like
+    }).catch((err) => {
+      console.error('Failed to copy link:', err);
+    });
+  }, [creatorId]);
 
 
   const onReady = (event: any) => {
@@ -363,10 +388,10 @@ export function Space({ creatorId }: any) {
           >
             Privacy
           </Link>
-          {/* <Button variant="ghost" size="sm" onClick={handleShare}>
+          <Button variant="ghost" size="sm" onClick={handleShare}>
             <ShareIcon className="h-6 w-6 fill-[#4a90e2]" />
             <span className="sr-only">Share</span>
-          </Button> */}
+          </Button>
         </nav>
       </footer>
     </div>
