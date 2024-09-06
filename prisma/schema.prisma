@@ -33,8 +33,8 @@ model Stream {
   title         String
   active        Boolean         @default(true)
   userId        String
-  user          User            @relation("UserStreams", fields: [userId], references: [id])
-  upvotes       Upvote[]        @relation("StreamUpvotes")
+  user          User            @relation("UserStreams", fields: [userId], references: [id]) // No onDelete here
+  upvotes       Upvote[]        @relation("StreamUpvotes") // No onDelete here
 }
 
 enum StreamType {
@@ -46,8 +46,8 @@ model Upvote {
   id       String @id @default(uuid())
   userId   String
   streamId String
-  user     User   @relation("UserUpvotes", fields: [userId], references: [id])
-  stream   Stream @relation("StreamUpvotes", fields: [streamId], references: [id])
+  user     User   @relation("UserUpvotes", fields: [userId], references: [id], onDelete: Cascade) // Cascade delete when a user is deleted
+  stream   Stream @relation("StreamUpvotes", fields: [streamId], references: [id], onDelete: Cascade) // Cascade delete when a stream is deleted
 
   @@unique([userId, streamId]) // Ensures that a user can upvote a stream only once
 }
@@ -55,6 +55,4 @@ model Upvote {
 model CurrentStream {
   userId    String @id
   streamId  String?   @unique // Enforcing uniqueness for one-to-one relation
-
 }
-

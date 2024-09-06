@@ -12,6 +12,10 @@ import { useRouter } from "next/navigation";
 import { PauseIcon } from './Icons';
 import YouTube, { YouTubePlayer } from 'react-youtube';
 
+// interface SpaceProps {
+//   creatorId: string;
+//   isPlaying?: boolean; // Optional prop to indicate if a song is playing
+// }
 
 
 
@@ -239,13 +243,10 @@ export function Space({ creatorId }: any) {
   </div>
   <div className="flex items-center gap-4">
     <Button variant="ghost" size="icon">
-      <RewindIcon className="h-6 w-6 fill-[#4a90e2]" />
+      <PlayIcon onClick={onPause} className="h-6 w-6 fill-[#4a90e2]" />
     </Button>
     <Button variant="ghost" size="icon">
-      <PlayIcon className="h-6 w-6 fill-[#4a90e2]" />
-    </Button>
-    <Button variant="ghost" size="icon">
-      <ForwardIcon className="h-6 w-6 fill-[#4a90e2]" />
+      <ForwardIcon onClick={handlePlayNext} className="h-6 w-6 fill-[#4a90e2]" />
     </Button>
     <Slider
       className="flex-1 [&>span:first-child]:h-1 [&>span:first-child]:bg-[#757575] [&_[role=slider]]:bg-[#4a90e2] [&_[role=slider]]:w-3 [&_[role=slider]]:h-3 [&_[role=slider]]:border-0 [&>span:first-child_span]:bg-[#4a90e2] [&_[role=slider]:focus-visible]:ring-0 [&_[role=slider]:focus-visible]:ring-offset-0 [&_[role=slider]:focus-visible]:scale-105 [&_[role=slider]:focus-visible]:transition-transform"
