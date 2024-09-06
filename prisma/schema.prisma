@@ -26,15 +26,16 @@ enum Provider {
 }
 
 model Stream {
-  id          String     @id @default(uuid())
-  type        StreamType
-  url         String
-  extractedId String
-  title       String
-  active      Boolean    @default(true)
-  userId      String
-  user        User       @relation("UserStreams", fields: [userId], references: [id])
-  upvotes     Upvote[]   @relation("StreamUpvotes")
+  id            String          @id @default(uuid())
+  type          StreamType
+  url           String
+  extractedId   String
+  title         String
+  active        Boolean         @default(true)
+  userId        String
+  user          User            @relation("UserStreams", fields: [userId], references: [id])
+  upvotes       Upvote[]        @relation("StreamUpvotes")
+  currentStream CurrentStream?  @relation("CurrentStreamStream") // Optional relation
 }
 
 enum StreamType {
@@ -51,3 +52,11 @@ model Upvote {
 
   @@unique([userId, streamId]) // Ensures that a user can upvote a stream only once
 }
+
+model CurrentStream {
+  userId    String @id
+  streamId  String?   @unique // Enforcing uniqueness for one-to-one relation
+  stream    Stream?   @relation("CurrentStreamStream", fields: [streamId], references: [id])
+
+}
+

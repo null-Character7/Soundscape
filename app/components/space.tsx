@@ -1,96 +1,107 @@
-/**
- * v0 by Vercel.
- * @see https://v0.dev/t/ZO7aiVtGeHq
- * Documentation: https://v0.dev/docs#integrating-generated-code-into-your-nextjs-app
- */
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useSession } from "next-auth/react"
-import axios from 'axios';
-import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useSession } from "next-auth/react";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
-
-export function Space({creatorId}:any) {
+export function Space({ creatorId }: any) {
   const router = useRouter();
-  const [newSongUrl, setNewSongUrl] = useState<string>('');
-  const [songs, setSongs] = useState([
-    {
-      streamId:"100",
-      title: "Bandey",
-      upvotes: 15,
-    },
-    {
-      streamId:"101",
-      title: "Alag Asmaan",
-      upvotes: 10,
-    },
-    {
-      streamId:"102",
-      title: "Somebody's me",
-      upvotes: 8,
-    },
-  ])
+  const [newSongUrl, setNewSongUrl] = useState<string>("");
+  const [songs, setSongs] = useState<
+    Array<{ streamId: string; title: string; upvotes: number }>
+  >([]);
+  const [curSong,setCursong] = useState<Array<{streamId:string; title: string;}>>([]);
+  const handlePlayNext = async() => {
+    try {
+      const response = await axios.get(
+        "/api/streams/next",
+        {
+          withCredentials: true,
+        }
+      );
+
+      console.log("top song is:", response.data);
+    } catch (error) {
+      console.error("Error getting top song:", error);
+    }
+  }
+
   const { data: session, status } = useSession();
 
   useEffect(() => {
     const fetchSongs = async () => {
-      if (status === 'authenticated') {
+      if (status === "authenticated") {
         try {
-          const response = await axios.get('/api/streams/my', {
-            withCredentials: true
-        });
-        console.log(response);
+          const response = await axios.get("/api/streams/my", {
+            withCredentials: true,
+          });
+          const streams = response.data.streams.map((stream: any) => ({
+            streamId: stream.id,
+            title: stream.title,
+            upvotes: stream.upvoteCount,
+          }));
+
+          setSongs(streams);
         } catch (error) {
-          console.error('Error fetching songs:', error);
+          console.error("Error fetching songs:", error);
         }
-      } else if (status === 'unauthenticated') {
-        router.push('/'); // Prompt user to sign in if not authenticated
+      } else if (status === "unauthenticated") {
+        router.push("/");
       }
     };
-
     fetchSongs();
+
+    const intervalId = setInterval(() => {
+      fetchSongs();
+    }, 20000);
+    return () => clearInterval(intervalId);
   }, [status, session]);
-  // const [newSongUrl, setNewSongUrl] = useState("")
-  const handleUpvote = async (index:number) => {
-    console.log(songs[index])
-    const songId = songs[index].streamId; // Ensure that songs[index] has an 'id' property
 
-  try {
-    const response = await axios.post('/api/streams/upvote', {
-      streamId: songId, // Include the song's ID in the request body
-    }, {
-      withCredentials: true // Ensure credentials are sent with the request
-    });
+  const handleUpvote = async (index: number) => {
+    console.log(songs[index]);
+    const songId = songs[index].streamId;
 
-    console.log("Upvote response:", response.data);
-    const updatedSongs = [...songs]
-    updatedSongs[index].upvotes++
-    updatedSongs.sort((a, b) => b.upvotes - a.upvotes)
-    setSongs(updatedSongs)
-  } catch (error) {
-    console.error("Error upvoting song:", error);
-  }
-    
-  }
-  const handleDownvote = async (index:number) => {
-    const songId = songs[index].streamId; // Ensure that songs[index] has a 'streamId' property
-  
     try {
-      const response = await axios.post('/api/streams/downvote', {
-        streamId: songId, // Include the song's ID in the request body
-      }, {
-        withCredentials: true // Ensure credentials are sent with the request
-      });
-  
+      const response = await axios.post(
+        "/api/streams/upvote",
+        {
+          streamId: songId,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      console.log("Upvote response:", response.data);
+      const updatedSongs = [...songs];
+      updatedSongs[index].upvotes++;
+      updatedSongs.sort((a, b) => b.upvotes - a.upvotes);
+      setSongs(updatedSongs);
+    } catch (error) {
+      console.error("Error upvoting song:", error);
+    }
+  };
+  const handleDownvote = async (index: number) => {
+    const songId = songs[index].streamId;
+
+    try {
+      const response = await axios.post(
+        "/api/streams/downvote",
+        {
+          streamId: songId,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
       console.log("Downvote response:", response.data);
-  
-      // Update the local state to reflect the new upvote count
       const updatedSongs = [...songs];
       if (updatedSongs[index].upvotes > 0) {
         updatedSongs[index].upvotes--;
@@ -101,60 +112,74 @@ export function Space({creatorId}:any) {
       console.error("Error downvoting song:", error);
     }
   };
-  
+
   const handleAddToQueue = async () => {
     if (newSongUrl.trim() !== "") {
-      console.log("Song url ",newSongUrl)
+      console.log("Song url ", newSongUrl);
       try {
-        const response = await axios.post('/api/streams', {
-          userId: creatorId, // Replace with the actual user ID variable
-          url: newSongUrl,            // Replace with the actual URL or the value you want to send
-        }, {
-          withCredentials: true       // This ensures that credentials (such as cookies) are sent along with the request
-        });
-      
-        // Handle the response or update the state as needed
+        const response = await axios.post(
+          "/api/streams",
+          {
+            userId: creatorId,
+            url: newSongUrl,
+          },
+          {
+            withCredentials: true,
+          }
+        );
+
         console.log("Stream added:", response.data);
-        const newStream=response.data.stream;
-        setSongs(prevSongs => [
+        const newStream = response.data.stream;
+        setSongs((prevSongs) => [
           ...prevSongs,
           {
-            streamId: newStream.id, // Use the ID from the response
-            title: newStream.title, // Use the title from the response
-            upvotes: 0, // Initialize upvotes to 0
-          }
+            streamId: newStream.id,
+            title: newStream.title,
+            upvotes: 0,
+          },
         ]);
-        console.log(songs)
-      
+        console.log(songs);
       } catch (error) {
-        // Handle any errors that occur during the async operation
         console.error("Error adding stream:", error);
       }
-      
-      setNewSongUrl("")
+
+      setNewSongUrl("");
     }
-  }
-  // const handleShare = () => {
-  //   console.log("Sharing the page...")
-  // }
+  };
   return (
     <div className="flex flex-col min-h-[100dvh] bg-gradient-to-r from-[#4a90e2] to-[#8e44ad] text-white">
       <header className="px-4 lg:px-6 h-14 flex items-center bg-[#e0e0e0] border-b">
-        <Link href="#" className="flex items-center justify-center" prefetch={false}>
+        <Link
+          href="#"
+          className="flex items-center justify-center"
+          prefetch={false}
+        >
           <Music2Icon className="h-6 w-6 fill-[#4a90e2]" />
           <span className="sr-only">Soundscape</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6">
-          <Button variant="ghost" className="px-4 py-2 rounded-md hover:bg-[#d0d0d0]/10">
+          <Button
+            variant="ghost"
+            className="px-4 py-2 rounded-md hover:bg-[#d0d0d0]/10"
+          >
             Explore
           </Button>
-          <Button variant="ghost" className="px-4 py-2 rounded-md hover:bg-[#d0d0d0]/10">
+          <Button
+            variant="ghost"
+            className="px-4 py-2 rounded-md hover:bg-[#d0d0d0]/10"
+          >
             My Spaces
           </Button>
-          <Button variant="ghost" className="px-4 py-2 rounded-md hover:bg-[#d0d0d0]/10">
+          <Button
+            variant="ghost"
+            className="px-4 py-2 rounded-md hover:bg-[#d0d0d0]/10"
+          >
             Settings
           </Button>
-          <Button variant="outline" className="px-4 py-2 rounded-md border-[#c5335f] text-[#ff3333]">
+          <Button
+            variant="outline"
+            className="px-4 py-2 rounded-md border-[#c5335f] text-[#ff3333]"
+          >
             <LogInIcon className="h-4 w-4 mr-2 fill-[#d72f86]" />
             Log Out
           </Button>
@@ -200,11 +225,27 @@ export function Space({creatorId}:any) {
               placeholder="Add song URL"
               value={newSongUrl}
               onChange={(e) => setNewSongUrl(e.target.value)}
-              className="flex-1 rounded-md border-[#4a90e2] text-[#333333] px-4 py-2"
+              className="flex-1 rounded-md border-[#4a90e2] bg-white text-[#d16ba5] px-4 py-2"
             />
-            <Button onClick={handleAddToQueue} className="px-4 py-2 rounded-md border-[#4a90e2] text-[#4a90e2]">
+
+            <Button
+              onClick={handleAddToQueue}
+              className="px-4 py-2 rounded-md border border-black text-blue-500 bg-black hover:text-white transition-all duration-300 ease-in-out shadow-md"
+            >
               Add to queue
             </Button>
+          </div>
+          <div className="flex flex-col min-h-[100dvh] text-white">
+            <div className="flex items-center gap-4 mt-4 justify-center">
+              <Button
+                onClick={() => handlePlayNext()}
+                className="px-6 py-2 rounded-lg border border-black text-blue-500 bg-black hover:text-white transition-all duration-300 ease-in-out shadow-md"
+              >
+                Play Next
+              </Button>
+            </div>
+
+            {/* Rest of your code */}
           </div>
         </div>
         <div className="flex flex-col gap-4 overflow-auto max-h-[80vh]">
@@ -216,15 +257,27 @@ export function Space({creatorId}:any) {
                   className="flex items-center justify-between bg-gradient-to-r from-[#4a90e2] to-[#8e44ad] rounded-md p-4"
                 >
                   <div>
-                    <h4 className="text-lg font-bold text-white">{song.title}</h4>
+                    <h4 className="text-lg font-bold text-white">
+                      {song.title}
+                    </h4>
                     {/* <p className="text-[#d0d0d0]">{song.artist}</p> */}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[#d0d0d0]">{song.upvotes} Upvotes</span>
-                    <Button variant="ghost" size="icon" onClick={() => handleUpvote(index)}>
+                    <span className="text-[#d0d0d0]">
+                      {song.upvotes} Upvotes
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleUpvote(index)}
+                    >
                       <ArrowUpIcon className="h-4 w-4 fill-white" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDownvote(index)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDownvote(index)}
+                    >
                       <ArrowDownIcon className="h-4 w-4 fill-white" />
                     </Button>
                   </div>
@@ -235,12 +288,22 @@ export function Space({creatorId}:any) {
         </div>
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
-        <p className="text-xs text-[#d0d0d0]">&copy; 2024 Soundscape. All rights reserved.</p>
+        <p className="text-xs text-[#d0d0d0]">
+          &copy; 2024 Soundscape. All rights reserved.
+        </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-          <Link href="#" className="text-xs hover:underline underline-offset-4 text-[#4a90e2]" prefetch={false}>
+          <Link
+            href="#"
+            className="text-xs hover:underline underline-offset-4 text-[#4a90e2]"
+            prefetch={false}
+          >
             Terms of Service
           </Link>
-          <Link href="#" className="text-xs hover:underline underline-offset-4 text-[#4a90e2]" prefetch={false}>
+          <Link
+            href="#"
+            className="text-xs hover:underline underline-offset-4 text-[#4a90e2]"
+            prefetch={false}
+          >
             Privacy
           </Link>
           {/* <Button variant="ghost" size="sm" onClick={handleShare}>
@@ -250,7 +313,7 @@ export function Space({creatorId}:any) {
         </nav>
       </footer>
     </div>
-  )
+  );
 }
 
 function ArrowDownIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -270,9 +333,8 @@ function ArrowDownIcon(props: React.SVGProps<SVGSVGElement>) {
       <path d="M12 5v14" />
       <path d="m19 12-7 7-7-7" />
     </svg>
-  )
+  );
 }
-
 
 function ArrowUpIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -291,9 +353,8 @@ function ArrowUpIcon(props: React.SVGProps<SVGSVGElement>) {
       <path d="m5 12 7-7 7 7" />
       <path d="M12 19V5" />
     </svg>
-  )
+  );
 }
-
 
 function ForwardIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -312,9 +373,8 @@ function ForwardIcon(props: React.SVGProps<SVGSVGElement>) {
       <polyline points="15 17 20 12 15 7" />
       <path d="M4 18v-2a4 4 0 0 1 4-4h12" />
     </svg>
-  )
+  );
 }
-
 
 function LogInIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -334,9 +394,8 @@ function LogInIcon(props: React.SVGProps<SVGSVGElement>) {
       <polyline points="10 17 15 12 10 7" />
       <line x1="15" x2="3" y1="12" y2="12" />
     </svg>
-  )
+  );
 }
-
 
 function Music2Icon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -355,9 +414,8 @@ function Music2Icon(props: React.SVGProps<SVGSVGElement>) {
       <circle cx="8" cy="18" r="4" />
       <path d="M12 18V2l7 4" />
     </svg>
-  )
+  );
 }
-
 
 function PlayIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -375,9 +433,8 @@ function PlayIcon(props: React.SVGProps<SVGSVGElement>) {
     >
       <polygon points="6 3 20 12 6 21 6 3" />
     </svg>
-  )
+  );
 }
-
 
 function RewindIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -396,9 +453,8 @@ function RewindIcon(props: React.SVGProps<SVGSVGElement>) {
       <polygon points="11 19 2 12 11 5 11 19" />
       <polygon points="22 19 13 12 22 5 22 19" />
     </svg>
-  )
+  );
 }
-
 
 function ShareIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -418,9 +474,8 @@ function ShareIcon(props: React.SVGProps<SVGSVGElement>) {
       <polyline points="16 6 12 2 8 6" />
       <line x1="12" x2="12" y1="2" y2="15" />
     </svg>
-  )
+  );
 }
-
 
 function Volume2Icon(props: React.SVGProps<SVGSVGElement>) {
   return (
@@ -440,5 +495,5 @@ function Volume2Icon(props: React.SVGProps<SVGSVGElement>) {
       <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
     </svg>
-  )
+  );
 }
