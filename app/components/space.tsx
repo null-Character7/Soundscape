@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -9,15 +9,40 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { PauseIcon } from './Icons';
+import YouTube, { YouTubePlayer } from 'react-youtube';
+
+
+
+
+
 
 export function Space({ creatorId }: any) {
+  const playerRef = useRef<YouTubePlayer | null>(null); // YouTube player reference
+
+
+  const onReady = (event: any) => {
+    playerRef.current = event.target;
+  };
+
+  const onPlay = () => {
+    setIsPlaying(true);
+    playerRef.current?.playVideo();
+  };
+
+  const onPause = () => {
+    setIsPlaying(false);
+    playerRef.current?.pauseVideo();
+  };
   const router = useRouter();
   const [newSongUrl, setNewSongUrl] = useState<string>("");
   const [songs, setSongs] = useState<
     Array<{ streamId: string; title: string; upvotes: number }>
   >([]);
-  const [curSong,setCursong] = useState<Array<{streamId:string; title: string;}>>([]);
-  const handlePlayNext = async() => {
+  const [curSong, setCurSong] = useState<{ streamId: string; title: string; extractedId: string } | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
+  const handlePlayNext = async () => {
     try {
       const response = await axios.get(
         "/api/streams/next",
@@ -25,8 +50,19 @@ export function Space({ creatorId }: any) {
           withCredentials: true,
         }
       );
-
-      console.log("top song is:", response.data);
+  
+      console.log("Top song is:", response.data);
+  
+      // Extract the mostUpvotedStream from the response
+      const mostUpvotedStream = response.data.mostUpvotedStream;
+  
+      // Update the curSong state
+      setCurSong({
+        streamId: mostUpvotedStream.id,
+        title: mostUpvotedStream.title,
+        extractedId: mostUpvotedStream.extractedId
+      });
+  
     } catch (error) {
       console.error("Error getting top song:", error);
     }
@@ -186,68 +222,88 @@ export function Space({ creatorId }: any) {
         </nav>
       </header>
       <main className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_400px] gap-8 p-8">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4">
-            <img
-              src="/placeholder.svg"
-              width="100"
-              height="100"
-              alt="Song Thumbnail"
-              className="rounded-lg"
-              style={{ aspectRatio: "100/100", objectFit: "cover" }}
-            />
-            <div>
-              <h3 className="text-xl font-bold text-[#333333]">Song Title</h3>
-              <p className="text-[#333333]">Artist Name</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon">
-              <RewindIcon className="h-6 w-6 fill-[#4a90e2]" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <PlayIcon className="h-6 w-6 fill-[#4a90e2]" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <ForwardIcon className="h-6 w-6 fill-[#4a90e2]" />
-            </Button>
-            <Slider
-              className="flex-1 [&>span:first-child]:h-1 [&>span:first-child]:bg-[#757575] [&_[role=slider]]:bg-[#4a90e2] [&_[role=slider]]:w-3 [&_[role=slider]]:h-3 [&_[role=slider]]:border-0 [&>span:first-child_span]:bg-[#4a90e2] [&_[role=slider]:focus-visible]:ring-0 [&_[role=slider]:focus-visible]:ring-offset-0 [&_[role=slider]:focus-visible]:scale-105 [&_[role=slider]:focus-visible]:transition-transform"
-              defaultValue={[40]}
-            />
-            <Button variant="ghost" size="icon">
-              <Volume2Icon className="h-6 w-6 fill-[#4a90e2]" />
-            </Button>
-          </div>
-          <div className="flex items-center gap-4">
-            <Input
-              type="text"
-              placeholder="Add song URL"
-              value={newSongUrl}
-              onChange={(e) => setNewSongUrl(e.target.value)}
-              className="flex-1 rounded-md border-[#4a90e2] bg-white text-[#d16ba5] px-4 py-2"
-            />
+      <div className="flex flex-col gap-4">
+  <div className="flex items-center gap-4">
+    <img
+      src="/placeholder.svg"
+      width="100"
+      height="100"
+      alt="Song Thumbnail"
+      className="rounded-lg"
+      style={{ aspectRatio: "100/100", objectFit: "cover" }}
+    />
+    <div>
+      <h3 className="text-xl font-bold text-[#333333]">Song Title</h3>
+      <p className="text-[#333333]">Artist Name</p>
+    </div>
+  </div>
+  <div className="flex items-center gap-4">
+    <Button variant="ghost" size="icon">
+      <RewindIcon className="h-6 w-6 fill-[#4a90e2]" />
+    </Button>
+    <Button variant="ghost" size="icon">
+      <PlayIcon className="h-6 w-6 fill-[#4a90e2]" />
+    </Button>
+    <Button variant="ghost" size="icon">
+      <ForwardIcon className="h-6 w-6 fill-[#4a90e2]" />
+    </Button>
+    <Slider
+      className="flex-1 [&>span:first-child]:h-1 [&>span:first-child]:bg-[#757575] [&_[role=slider]]:bg-[#4a90e2] [&_[role=slider]]:w-3 [&_[role=slider]]:h-3 [&_[role=slider]]:border-0 [&>span:first-child_span]:bg-[#4a90e2] [&_[role=slider]:focus-visible]:ring-0 [&_[role=slider]:focus-visible]:ring-offset-0 [&_[role=slider]:focus-visible]:scale-105 [&_[role=slider]:focus-visible]:transition-transform"
+      defaultValue={[40]}
+    />
+    <Button variant="ghost" size="icon">
+      <Volume2Icon className="h-6 w-6 fill-[#4a90e2]" />
+    </Button>
+  </div>
+  <div className="flex items-center gap-4">
+    <Input
+      type="text"
+      placeholder="Add song URL"
+      value={newSongUrl}
+      onChange={(e) => setNewSongUrl(e.target.value)}
+      className="flex-1 rounded-md border-[#4a90e2] bg-white text-[#d16ba5] px-4 py-2"
+    />
+    <Button
+      onClick={handleAddToQueue}
+      className="px-4 py-2 rounded-md border border-black text-blue-500 bg-black hover:text-white transition-all duration-300 ease-in-out shadow-md"
+    >
+      Add to queue
+    </Button>
+  </div>
+  <div className="flex items-center gap-4 justify-center">
+    <Button
+      onClick={() => handlePlayNext()}
+      className="px-6 py-2 rounded-lg border border-black text-blue-500 bg-black hover:text-white transition-all duration-300 ease-in-out shadow-md"
+    >
+      Play Next
+    </Button>
+  </div>
+  {curSong ? (
+    <>
+      <YouTube
+        videoId={curSong.extractedId}
+        opts={{
+          height: '390',
+          width: '640',
+          playerVars: { autoplay: 1 }
+        }}
+        onReady={onReady}
+        className="mt-4"  // Adjust the margin-top to reduce gap
+      />
+      <div className="flex items-center gap-4 mt-4">
+        <Button onClick={onPlay} variant="ghost" size="icon">
+          <PlayIcon className="h-6 w-6 fill-[#4a90e2]" />
+        </Button>
+        <Button onClick={onPause} variant="ghost" size="icon">
+          <PauseIcon className="h-6 w-6 fill-[#4a90e2]" />
+        </Button>
+      </div>
+    </>
+  ) : (
+    <p>No song playing</p>
+  )}
+</div>
 
-            <Button
-              onClick={handleAddToQueue}
-              className="px-4 py-2 rounded-md border border-black text-blue-500 bg-black hover:text-white transition-all duration-300 ease-in-out shadow-md"
-            >
-              Add to queue
-            </Button>
-          </div>
-          <div className="flex flex-col min-h-[100dvh] text-white">
-            <div className="flex items-center gap-4 mt-4 justify-center">
-              <Button
-                onClick={() => handlePlayNext()}
-                className="px-6 py-2 rounded-lg border border-black text-blue-500 bg-black hover:text-white transition-all duration-300 ease-in-out shadow-md"
-              >
-                Play Next
-              </Button>
-            </div>
-
-            {/* Rest of your code */}
-          </div>
-        </div>
         <div className="flex flex-col gap-4 overflow-auto max-h-[80vh]">
           <ScrollArea className="flex-1">
             <div className="grid gap-4">

@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
         { status: 404 }
       );
     }
+    console.log(user)
 
     // Get the userId from the fetched user
     const userId = user.id;
@@ -57,6 +58,12 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Delete the stream from the Stream table
+    await prismaClient.stream.delete({
+      where: {
+        id: mostUpvotedStream.id,
+      },
+    });
 
     // Upsert the stream into the CurrentStream table
     await prismaClient.currentStream.upsert({
@@ -73,7 +80,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { mostUpvotedStream, message: 'Stream moved to CurrentStream successfully' },
+      { mostUpvotedStream, message: 'Stream moved to CurrentStream and deleted from Stream successfully' },
       { status: 200 }
     );
     
