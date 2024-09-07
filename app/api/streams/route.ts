@@ -5,7 +5,8 @@ import { StreamType } from '@prisma/client';
 import { getServerSession } from "next-auth/next";
 import axios from 'axios';
 
-const apiKey = process.env.YOUTUBE_API_KEY; // Ensure this is set in your environment variables
+
+const YTapiKey = process.env.YOUTUBE_API_KEY; // Ensure this is set in your environment variables
 
 // Input validation schema
 const streamSchema = z.object({
@@ -80,12 +81,6 @@ export async function POST(req: NextRequest) {
     // Parse the request body
     const body = await req.json();
     const { userId, url } = streamSchema.parse(body);
-    if (userId !== id) {
-      return NextResponse.json(
-        { message: 'Unauthorized user' },
-        { status: 403 }
-      );
-    }
 
     // Determine stream type and extract ID
     const { type, extractedId } = getStreamTypeAndId(url);
