@@ -21,7 +21,8 @@ import { useCallback } from 'react';
 
 
 
-export function Space({ creatorId }: any) {
+export function Space({ creatorId, isStreamer }: any) {
+  console.log("IN SPACE")
   const playerRef = useRef<YouTubePlayer | null>(null); // YouTube player reference
 
   // Simple hash function (for demonstration purposes)
@@ -100,13 +101,14 @@ export function Space({ creatorId }: any) {
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    const fetchSongs = async () => {
+    const fetchSongsForStreamer = async () => {
       if (status === "authenticated") {
         try {
           const response = await axios.get("/api/streams/my", {
             withCredentials: true,
           });
-          const streams = response.data.streams.map((stream: any) => ({
+
+          const streams = response.data.streams.map((stream:any) => ({
             streamId: stream.id,
             title: stream.title,
             upvotes: stream.upvoteCount,
@@ -120,13 +122,47 @@ export function Space({ creatorId }: any) {
         router.push("/");
       }
     };
+
+    const fetchSongsForViewer = async () => {
+      if (status === "authenticated") {
+        try {
+          const response = await axios.get(`/api/streams?creatorId=${creatorId}`, {
+            withCredentials: true,
+          });   
+          
+          console.log(response)
+
+          const streams = response.data.map((stream:any) => ({
+            streamId: stream.id,
+            title: stream.title,
+            upvotes: stream.upvoteCount,
+          }));
+          
+
+          setSongs(streams);
+          const currentSongResponse = await axios.get(`/api/streams/current?creatorId=${creatorId}`, {
+            withCredentials: true,
+          });
+          const currentSong = currentSongResponse.data.currentSong; // Assuming the response gives back a "currentSong" field
+          setCurSong(currentSong);
+        } catch (error) {
+          console.error("Error fetching songs:", error);
+        }
+      } else if (status === "unauthenticated") {
+        router.push("/");
+      }
+    };
+
+    const fetchSongs = isStreamer ? fetchSongsForStreamer : fetchSongsForViewer;
+
     fetchSongs();
 
     const intervalId = setInterval(() => {
       fetchSongs();
-    }, 20000);
+    }, 20000); // Poll every 20 seconds
+
     return () => clearInterval(intervalId);
-  }, [status, session]);
+  }, [status, session, isStreamer, creatorId, router]);
 
   const handleUpvote = async (index: number) => {
     console.log(songs[index]);
@@ -267,12 +303,14 @@ export function Space({ creatorId }: any) {
     </div>
   </div>
   <div className="flex items-center gap-4">
-    <Button variant="ghost" size="icon">
+    {isStreamer && (<Button variant="ghost" size="icon">
       <PlayIcon onClick={onPause} className="h-6 w-6 fill-[#4a90e2]" />
-    </Button>
-    <Button variant="ghost" size="icon">
-      <ForwardIcon onClick={handlePlayNext} className="h-6 w-6 fill-[#4a90e2]" />
-    </Button>
+    </Button>)}
+    {isStreamer && (
+  <Button variant="ghost" size="icon">
+    <ForwardIcon onClick={handlePlayNext} className="h-6 w-6 fill-[#4a90e2]" />
+  </Button>
+)}
     <Slider
       className="flex-1 [&>span:first-child]:h-1 [&>span:first-child]:bg-[#757575] [&_[role=slider]]:bg-[#4a90e2] [&_[role=slider]]:w-3 [&_[role=slider]]:h-3 [&_[role=slider]]:border-0 [&>span:first-child_span]:bg-[#4a90e2] [&_[role=slider]:focus-visible]:ring-0 [&_[role=slider]:focus-visible]:ring-offset-0 [&_[role=slider]:focus-visible]:scale-105 [&_[role=slider]:focus-visible]:transition-transform"
       defaultValue={[40]}
@@ -297,12 +335,12 @@ export function Space({ creatorId }: any) {
     </Button>
   </div>
   <div className="flex items-center gap-4 justify-center">
-    <Button
+    {isStreamer && (<Button
       onClick={() => handlePlayNext()}
       className="px-6 py-2 rounded-lg border border-black text-blue-500 bg-black hover:text-white transition-all duration-300 ease-in-out shadow-md"
     >
       Play Next
-    </Button>
+    </Button>)}
   </div>
   {curSong ? (
     <>

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,11 +8,12 @@ datasource db {
 }
 
 model User {
-  id       String   @id @default(uuid())
-  email    String   @unique
-  provider Provider
-  streams  Stream[] @relation("UserStreams")
-  upvotes  Upvote[] @relation("UserUpvotes")
+  id             String          @id @default(uuid())
+  email          String          @unique
+  provider       Provider
+  streams        Stream[]        @relation("UserStreams")
+  upvotes        Upvote[]        @relation("UserUpvotes")
+  currentStream  CurrentStream?  @relation("UserCurrentStream") // Optional reference to current stream
 }
 
 enum Provider {
@@ -35,6 +30,10 @@ model Stream {
   userId        String
   user          User            @relation("UserStreams", fields: [userId], references: [id]) // No onDelete here
   upvotes       Upvote[]        @relation("StreamUpvotes") // No onDelete here
+  currentStream CurrentStream?  @relation("StreamCurrentStream") // Optional reference to CurrentStream
+  timesPlayed   Int             @default(0) // New field to track the number of times played
+  playedDate    DateTime?       // New field to track the last played date
+  thumbnailUrl  String?          // New field to store the URL of the video thumbnail
 }
 
 enum StreamType {
@@ -54,5 +53,8 @@ model Upvote {
 
 model CurrentStream {
   userId    String @id
-  streamId  String?   @unique // Enforcing uniqueness for one-to-one relation
+  streamId  String @unique
+  url       String
+  user      User   @relation("UserCurrentStream", fields: [userId], references: [id], onDelete: Cascade) // Cascade delete when user is deleted
+  stream    Stream @relation("StreamCurrentStream", fields: [streamId], references: [id], onDelete: Cascade) // Cascade delete when stream is deleted
 }

@@ -19,7 +19,7 @@ export function Landing() {
     if (userId) {
       // Redirect to /streams/userId
       console.log(userId);
-      router.push(`/streams/${userId}`);
+      router.push(`/streams`);
     } else {
       console.error('User is not logged in');
     }
