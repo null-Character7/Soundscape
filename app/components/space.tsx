@@ -67,7 +67,7 @@ export function Space({ creatorId, isStreamer }: any) {
   const router = useRouter();
   const [newSongUrl, setNewSongUrl] = useState<string>("");
   const [songs, setSongs] = useState<
-    Array<{ streamId: string; title: string; upvotes: number }>
+    Array<{ streamId: string; title: string; upvotes: number; }>
   >([]);
   const [curSong, setCurSong] = useState<{ streamId: string; title: string; extractedId: string } | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -90,7 +90,7 @@ export function Space({ creatorId, isStreamer }: any) {
       setCurSong({
         streamId: mostUpvotedStream.id,
         title: mostUpvotedStream.title,
-        extractedId: mostUpvotedStream.extractedId
+        extractedId: mostUpvotedStream.extractedId,
       });
   
     } catch (error) {
@@ -101,12 +101,13 @@ export function Space({ creatorId, isStreamer }: any) {
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    const fetchSongsForStreamer = async () => {
+    const fetchSongs = async () => {
       if (status === "authenticated") {
         try {
-          const response = await axios.get("/api/streams/my", {
+          const response = await axios.get(`/api/streams?creatorId=${creatorId}`, {
             withCredentials: true,
           });
+          console.log("fetched songs are ",response)
 
           const streams = response.data.streams.map((stream:any) => ({
             streamId: stream.id,
@@ -115,6 +116,15 @@ export function Space({ creatorId, isStreamer }: any) {
           }));
 
           setSongs(streams);
+          if (response.data.currentStream) {
+            const currentStream = {
+              streamId: response.data.currentStream.id,
+              title: response.data.currentStream.title,
+              extractedId: response.data.currentStream.extractedId,
+            };
+          
+            setCurSong(currentStream);
+          }
         } catch (error) {
           console.error("Error fetching songs:", error);
         }
@@ -122,38 +132,6 @@ export function Space({ creatorId, isStreamer }: any) {
         router.push("/");
       }
     };
-
-    const fetchSongsForViewer = async () => {
-      if (status === "authenticated") {
-        try {
-          const response = await axios.get(`/api/streams?creatorId=${creatorId}`, {
-            withCredentials: true,
-          });   
-          
-          console.log(response)
-
-          const streams = response.data.map((stream:any) => ({
-            streamId: stream.id,
-            title: stream.title,
-            upvotes: stream.upvoteCount,
-          }));
-          
-
-          setSongs(streams);
-          const currentSongResponse = await axios.get(`/api/streams/current?creatorId=${creatorId}`, {
-            withCredentials: true,
-          });
-          const currentSong = currentSongResponse.data.currentSong; // Assuming the response gives back a "currentSong" field
-          setCurSong(currentSong);
-        } catch (error) {
-          console.error("Error fetching songs:", error);
-        }
-      } else if (status === "unauthenticated") {
-        router.push("/");
-      }
-    };
-
-    const fetchSongs = isStreamer ? fetchSongsForStreamer : fetchSongsForViewer;
 
     fetchSongs();
 
