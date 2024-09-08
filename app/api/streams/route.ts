@@ -125,7 +125,6 @@ const querySchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  
   try {
     // Get the creatorId from the request query
     const session = await getServerSession();
@@ -185,22 +184,26 @@ export async function GET(req: NextRequest) {
       });
     }
     
-    // Fetch all songs for the creator from the database
+    // Fetch the latest 20 songs for the creator from the database
     const streams = await prismaClient.stream.findMany({
       where: {
         userId: creatorId,         // Streams belonging to the user
-        timesPlayed: 0, // Only fetch streams where timesPlayed is 0
+        timesPlayed: 0,            // Only fetch streams where timesPlayed is 0
       },
+      orderBy: {
+        playedDate: 'desc',        // Sort by the most recently played
+      },
+      take: 20,                     // Limit the result to the latest 20 streams
       include: {
         _count: {
           select: { upvotes: true }, // Count the number of upvotes
         },
         upvotes: {
           where: {
-            userId: user.id, // Filter upvotes for the current user
+            userId: user.id,         // Filter upvotes for the current user
           },
           select: {
-            id: true, // Select specific fields from upvotes, e.g., id
+            id: true,                // Select specific fields from upvotes, e.g., id
           },
         },
       },
