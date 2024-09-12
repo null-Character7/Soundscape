@@ -8,9 +8,11 @@ import Image from 'next/image';
 import hero from "../images/hero.jpg"
 import { FaGoogle } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
+import { useSocket } from '../hooks/useSocket';
 
 
 export function Landing() {
+  const socket = useSocket();
   const { data: session } = useSession();
   const router = useRouter();
   const handleRedirect = () => {
@@ -19,6 +21,7 @@ export function Landing() {
     if (userId) {
       // Redirect to /streams/userId
       console.log(userId);
+      
       router.push(`/streams`);
     } else {
       console.error('User is not logged in');
@@ -86,7 +89,7 @@ export function Landing() {
                     Soundscape: Your Personal Music Hub
                   </h1>
                   <p className="max-w-[600px] text-primary-foreground/80 md:text-xl">
-                    Create your own music spaces, share your favorite songs, and
+                    Create your own music space, add your favorite songs, and
                     let your friends contribute to the vibe.
                   </p>
                 </div>

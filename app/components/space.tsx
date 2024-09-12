@@ -13,8 +13,13 @@ import { PauseIcon } from './Icons';
 import YouTube, { YouTubePlayer } from 'react-youtube';
 
 import { useCallback } from 'react';
+import { useSocket } from "../hooks/useSocket";
 
-
+export enum SupportedMessage {
+  UpvoteSuccess = "UPVOTE_SUCCESS",
+  DownvoteSuccess = "DOWNVOTE_SUCCESS",
+  SongAdded = "SONG_ADDED"
+}
 
 
 
@@ -22,18 +27,68 @@ import { useCallback } from 'react';
 
 
 export function Space({ creatorId, isStreamer }: any) {
-  console.log("IN SPACE")
   const playerRef = useRef<YouTubePlayer | null>(null); // YouTube player reference
+  const [newSongUrl, setNewSongUrl] = useState<string>("");
+  const [songs, setSongs] = useState<
+    Array<{ streamId: string; title: string; upvotes: number; }>
+  >([]);
+  const [curSong, setCurSong] = useState<{ streamId: string; title: string; extractedId: string } | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
+  const socket = useSocket();
+  const { data: session, status } = useSession();
+
+
+  useEffect(() => {
+    if (!socket) {
+      return;
+    }
+
+    socket.onmessage = function (event) {
+      const message = JSON.parse(event.data);
+      switch (message.type) {
+        case SupportedMessage.UpvoteSuccess:
+        case SupportedMessage.DownvoteSuccess:
+          // Handle the case where a song's upvote or downvote is successful
+          const updatedStreams = message.payload.streams;
+          // Update your state or UI based on the updated streams
+          console.log('Streams updated:', updatedStreams);
+          setSongs(updatedStreams)
+          break;
+
+        case SupportedMessage.SongAdded:
+          // Handle the case where a song is added
+          const newStreams = message.payload.streams;
+          // Update your state or UI with the new streams
+          console.log('New streams added:', newStreams);
+          setSongs(newStreams)
+          break;
+
+        default:
+          console.error('Unhandled message type:', message.type);
+          break;
+      }
+    };
+
+    if (socket.readyState === WebSocket.OPEN) {
+      socket?.send(
+        JSON.stringify({
+          type: "JOIN_ROOM",
+          payload: {
+            userId:session?.user.id,
+            spaceId:creatorId
+          },
+        }),
+      );
+    }
+
+    return () => {
+      socket.close();
+    };
+  }, [socket]);
 
   // Simple hash function (for demonstration purposes)
   function hashCreatorId(creatorId: string): string {
-    // let hash = 0;
-    // for (let i = 0; i < creatorId.length; i++) {
-    //   const char = creatorId.charCodeAt(i);
-    //   hash = (hash << 5) - hash + char;
-    //   hash |= 0; // Convert to 32bit integer
-    // }
-    // return Math.abs(hash).toString();
     return creatorId;
   }
 
@@ -44,7 +99,6 @@ export function Space({ creatorId, isStreamer }: any) {
     // Copy to clipboard
     navigator.clipboard.writeText(link).then(() => {
       console.log("Link copied to clipboard:", link);
-      // You can add a toast or feedback message here if you like
     }).catch((err) => {
       console.error('Failed to copy link:', err);
     });
@@ -65,13 +119,7 @@ export function Space({ creatorId, isStreamer }: any) {
     playerRef.current?.pauseVideo();
   };
   const router = useRouter();
-  const [newSongUrl, setNewSongUrl] = useState<string>("");
-  const [songs, setSongs] = useState<
-    Array<{ streamId: string; title: string; upvotes: number; }>
-  >([]);
-  const [curSong, setCurSong] = useState<{ streamId: string; title: string; extractedId: string } | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef(null);
+  
   const handlePlayNext = async () => {
     try {
       const response = await axios.get(
@@ -98,9 +146,8 @@ export function Space({ creatorId, isStreamer }: any) {
     }
   }
 
-  const { data: session, status } = useSession();
-
   useEffect(() => {
+
     const fetchSongs = async () => {
       if (status === "authenticated") {
         try {
@@ -162,6 +209,17 @@ export function Space({ creatorId, isStreamer }: any) {
       updatedSongs[index].upvotes++;
       updatedSongs.sort((a, b) => b.upvotes - a.upvotes);
       setSongs(updatedSongs);
+      socket?.send(
+        JSON.stringify({
+          type: "UPVOTE",
+          payload: {
+            userId:session?.user.id,
+            spaceId:creatorId,
+            streamId:songId
+          },
+        }),
+      );
+      
     } catch (error) {
       console.error("Error upvoting song:", error);
     }
@@ -187,6 +245,18 @@ export function Space({ creatorId, isStreamer }: any) {
       }
       updatedSongs.sort((a, b) => b.upvotes - a.upvotes);
       setSongs(updatedSongs);
+
+      socket?.send(
+        JSON.stringify({
+          type: "DOWNVOTE",
+          payload: {
+            userId:session?.user.id,
+            spaceId:creatorId,
+            streamId:songId
+          },
+        }),
+      );
+      
     } catch (error) {
       console.error("Error downvoting song:", error);
     }
@@ -218,10 +288,21 @@ export function Space({ creatorId, isStreamer }: any) {
           },
         ]);
         console.log(songs);
+        socket?.send(
+          JSON.stringify({
+            type: "ADD_SONG",
+            payload: {
+              userId:session?.user.id,
+              spaceId:creatorId,
+              streamId:newStream.id,
+              upvotes:0,
+              title:newStream.title
+            },
+          }),
+        );
       } catch (error) {
         console.error("Error adding stream:", error);
       }
-
       setNewSongUrl("");
     }
   };
