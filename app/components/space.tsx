@@ -133,17 +133,23 @@ export function Space({ creatorId, isStreamer }: any) {
   
   const handlePlayNext = async () => {
     try {
-      const response = await axios.get(
-        "/api/streams/next",
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await fetch("/api/streams/next", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
   
-      console.log("Top song is:", response.data);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Top song is:", data);
   
       // Extract the mostUpvotedStream from the response
-      const mostUpvotedStream = response.data.mostUpvotedStream;
+      const mostUpvotedStream = data.mostUpvotedStream;
   
       // Update the curSong state
       setCurSong({
@@ -155,43 +161,51 @@ export function Space({ creatorId, isStreamer }: any) {
         JSON.stringify({
           type: "PLAY_NEXT",
           payload: {
-            userId:session?.user.id,
-            spaceId:creatorId,
-            streamId:mostUpvotedStream.id,
-            upvotes:0,
-            title:mostUpvotedStream.title
+            userId: session?.user.id,
+            spaceId: creatorId,
+            streamId: mostUpvotedStream.id,
+            upvotes: 0,
+            title: mostUpvotedStream.title
           },
         }),
       );
 
-  
     } catch (error) {
       console.error("Error getting top song:", error);
     }
   }
 
   useEffect(() => {
-
     const fetchSongs = async () => {
       if (status === "authenticated") {
         try {
-          const response = await axios.get(`/api/streams?creatorId=${creatorId}`, {
-            withCredentials: true,
+          const response = await fetch(`/api/streams?creatorId=${creatorId}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
           });
-          console.log("fetched songs are ",response)
 
-          const streams = response.data.streams.map((stream:any) => ({
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log("fetched songs are ", data);
+
+          const streams = data.streams.map((stream: any) => ({
             streamId: stream.id,
             title: stream.title,
             upvotes: stream.upvoteCount,
           }));
 
           setSongs(streams);
-          if (response.data.currentStream) {
+          if (data.currentStream) {
             const currentStream = {
-              streamId: response.data.currentStream.id,
-              title: response.data.currentStream.title,
-              extractedId: response.data.currentStream.extractedId,
+              streamId: data.currentStream.id,
+              title: data.currentStream.title,
+              extractedId: data.currentStream.extractedId,
             };
           
             setCurSong(currentStream);
@@ -208,7 +222,7 @@ export function Space({ creatorId, isStreamer }: any) {
 
     const intervalId = setInterval(() => {
       fetchSongs();
-    }, 50000); // Poll every 20 seconds
+    }, 50000); // Poll every 50 seconds
 
     return () => clearInterval(intervalId);
   }, [status, session, isStreamer, creatorId, router]);
@@ -218,17 +232,23 @@ export function Space({ creatorId, isStreamer }: any) {
     const songId = songs[index].streamId;
 
     try {
-      const response = await axios.post(
-        "/api/streams/upvote",
-        {
-          streamId: songId,
+      const response = await fetch("/api/streams/upvote", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        {
-          withCredentials: true,
-        }
-      );
+        body: JSON.stringify({
+          streamId: songId,
+        }),
+        credentials: "include",
+      });
 
-      console.log("Upvote response:", response.data);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Upvote response:", data);
       const updatedSongs = [...songs];
       updatedSongs[index].upvotes++;
       updatedSongs.sort((a, b) => b.upvotes - a.upvotes);
@@ -237,9 +257,9 @@ export function Space({ creatorId, isStreamer }: any) {
         JSON.stringify({
           type: "UPVOTE",
           payload: {
-            userId:session?.user.id,
-            spaceId:creatorId,
-            streamId:songId
+            userId: session?.user.id,
+            spaceId: creatorId,
+            streamId: songId
           },
         }),
       );
@@ -248,21 +268,28 @@ export function Space({ creatorId, isStreamer }: any) {
       console.error("Error upvoting song:", error);
     }
   };
+
   const handleDownvote = async (index: number) => {
     const songId = songs[index].streamId;
 
     try {
-      const response = await axios.post(
-        "/api/streams/downvote",
-        {
-          streamId: songId,
+      const response = await fetch("/api/streams/downvote", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        {
-          withCredentials: true,
-        }
-      );
+        body: JSON.stringify({
+          streamId: songId,
+        }),
+        credentials: "include",
+      });
 
-      console.log("Downvote response:", response.data);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Downvote response:", data);
       const updatedSongs = [...songs];
       if (updatedSongs[index].upvotes > 0) {
         updatedSongs[index].upvotes--;
@@ -274,9 +301,9 @@ export function Space({ creatorId, isStreamer }: any) {
         JSON.stringify({
           type: "DOWNVOTE",
           payload: {
-            userId:session?.user.id,
-            spaceId:creatorId,
-            streamId:songId
+            userId: session?.user.id,
+            spaceId: creatorId,
+            streamId: songId
           },
         }),
       );
@@ -290,19 +317,28 @@ export function Space({ creatorId, isStreamer }: any) {
     if (newSongUrl.trim() !== "") {
       console.log("Song url ", newSongUrl);
       try {
-        const response = await axios.post(
-          "/api/streams",
-          {
+        // Make a POST request to the API
+        const response = await fetch("/api/streams", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
             userId: creatorId,
             url: newSongUrl,
-          },
-          {
-            withCredentials: true,
-          }
-        );
-
-        console.log("Stream added:", response.data);
-        const newStream = response.data.stream;
+          }),
+        });
+  
+        // Check if the response is OK
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+  
+        // Parse the JSON response
+        const data = await response.json();
+        console.log("Stream added:", data);
+  
+        const newStream = data.stream;
         setSongs((prevSongs) => [
           ...prevSongs,
           {
@@ -312,17 +348,19 @@ export function Space({ creatorId, isStreamer }: any) {
           },
         ]);
         console.log(songs);
+  
+        // Send the update via WebSocket
         socket?.send(
           JSON.stringify({
             type: "ADD_SONG",
             payload: {
-              userId:session?.user.id,
-              spaceId:creatorId,
-              streamId:newStream.id,
-              upvotes:0,
-              title:newStream.title
+              userId: session?.user.id,
+              spaceId: creatorId,
+              streamId: newStream.id,
+              upvotes: 0,
+              title: newStream.title,
             },
-          }),
+          })
         );
       } catch (error) {
         console.error("Error adding stream:", error);
@@ -330,6 +368,7 @@ export function Space({ creatorId, isStreamer }: any) {
       setNewSongUrl("");
     }
   };
+  
   return (
     <div className="flex flex-col min-h-[100dvh] bg-gradient-to-r from-[#4a90e2] to-[#8e44ad] text-white">
       <header className="px-4 lg:px-6 h-14 flex items-center bg-[#e0e0e0] border-b">
