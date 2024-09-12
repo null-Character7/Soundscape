@@ -12,7 +12,7 @@ export default function Streams({ params }: { params: { userId: string } }) {
   return (
     <main>
       {params.userId ? (
-        <Space creatorId={params.userId[0]} isStreamer={isStreamer} />
+        <Space creatorId={params.userId} isStreamer={isStreamer} />
       ) : (
         <p>Loading...</p> // Or any other fallback UI
       )}

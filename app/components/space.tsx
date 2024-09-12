@@ -14,13 +14,12 @@ import YouTube, { YouTubePlayer } from 'react-youtube';
 
 import { useCallback } from 'react';
 import { useSocket } from "../hooks/useSocket";
-
 export enum SupportedMessage {
   UpvoteSuccess = "UPVOTE_SUCCESS",
   DownvoteSuccess = "DOWNVOTE_SUCCESS",
-  SongAdded = "SONG_ADDED"
+  SongAdded = "SONG_ADDED",
+  PlayingNext = "PLAYING_NEXT"
 }
-
 
 
 
@@ -37,6 +36,7 @@ export function Space({ creatorId, isStreamer }: any) {
   const audioRef = useRef(null);
   const socket = useSocket();
   const { data: session, status } = useSession();
+  console.log("session is ",session)
 
 
   useEffect(() => {
@@ -49,28 +49,39 @@ export function Space({ creatorId, isStreamer }: any) {
       switch (message.type) {
         case SupportedMessage.UpvoteSuccess:
         case SupportedMessage.DownvoteSuccess:
-          // Handle the case where a song's upvote or downvote is successful
-          const updatedStreams = message.payload.streams;
-          // Update your state or UI based on the updated streams
-          console.log('Streams updated:', updatedStreams);
-          setSongs(updatedStreams)
-          break;
-
+            // Handle the case where a song's upvote or downvote is successful
+            const updatedStreams = message.payload.streams;
+            // Update your state or UI based on the updated streams
+            console.log('Streams updated:', updatedStreams);
+            setSongs(updatedStreams);
+            break;
+    
         case SupportedMessage.SongAdded:
-          // Handle the case where a song is added
-          const newStreams = message.payload.streams;
-          // Update your state or UI with the new streams
-          console.log('New streams added:', newStreams);
-          setSongs(newStreams)
-          break;
-
+            // Handle the case where a song is added
+            const newStreams = message.payload.streams;
+            // Update your state or UI with the new streams
+            console.log('New streams added:', newStreams);
+            setSongs(newStreams);
+            break;
+    
+        case SupportedMessage.PlayingNext:
+            // Handle the case where the next song is being played
+            const { streams: nextStreams, currentStream } = message.payload;
+            // Update your state or UI with the new streams and current stream
+            console.log('Next song playing:', currentStream);
+            console.log('Updated streams:', nextStreams);
+            setSongs(nextStreams);
+            setCurSong(currentStream);
+            break;
+    
         default:
-          console.error('Unhandled message type:', message.type);
-          break;
+            console.error('Unhandled message type:', message.type);
+            break;
       }
     };
 
     if (socket.readyState === WebSocket.OPEN) {
+      console.log("Connecting from here ",session?.user.id)
       socket?.send(
         JSON.stringify({
           type: "JOIN_ROOM",
@@ -140,6 +151,19 @@ export function Space({ creatorId, isStreamer }: any) {
         title: mostUpvotedStream.title,
         extractedId: mostUpvotedStream.extractedId,
       });
+      socket?.send(
+        JSON.stringify({
+          type: "PLAY_NEXT",
+          payload: {
+            userId:session?.user.id,
+            spaceId:creatorId,
+            streamId:mostUpvotedStream.id,
+            upvotes:0,
+            title:mostUpvotedStream.title
+          },
+        }),
+      );
+
   
     } catch (error) {
       console.error("Error getting top song:", error);
@@ -184,7 +208,7 @@ export function Space({ creatorId, isStreamer }: any) {
 
     const intervalId = setInterval(() => {
       fetchSongs();
-    }, 20000); // Poll every 20 seconds
+    }, 50000); // Poll every 20 seconds
 
     return () => clearInterval(intervalId);
   }, [status, session, isStreamer, creatorId, router]);

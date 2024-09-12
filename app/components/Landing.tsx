@@ -8,11 +8,9 @@ import Image from 'next/image';
 import hero from "../images/hero.jpg"
 import { FaGoogle } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
-import { useSocket } from '../hooks/useSocket';
 
 
 export function Landing() {
-  const socket = useSocket();
   const { data: session } = useSession();
   const router = useRouter();
   const handleRedirect = () => {
