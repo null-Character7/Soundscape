@@ -41,6 +41,7 @@ export function Space({ creatorId, isStreamer }: any) {
 
   useEffect(() => {
     if (!socket) {
+      console.log("socket nhi mila mkc")
       return;
     }
 
@@ -164,7 +165,7 @@ export function Space({ creatorId, isStreamer }: any) {
             userId: session?.user.id,
             spaceId: creatorId,
             streamId: mostUpvotedStream.id,
-            upvotes: 0,
+            extractedId: mostUpvotedStream.extractedId,
             title: mostUpvotedStream.title
           },
         }),
