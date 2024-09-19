@@ -20,6 +20,8 @@ import { useSocket } from "../hooks/useSocket";
 import { BackgroundGradient } from "@/components/ui/background-gradient";
 import Image from "next/image";
 import { TracingBeam } from "./ui/tracing-beams";
+import { ShootingStars } from "./ui/shooting-stars";
+import { StarsBackground } from "./ui/stars-background";
 export enum SupportedMessage {
   UpvoteSuccess = "UPVOTE_SUCCESS",
   DownvoteSuccess = "DOWNVOTE_SUCCESS",
@@ -37,6 +39,7 @@ export function Space({ creatorId, isStreamer }: any) {
     streamId: string;
     title: string;
     extractedId: string;
+    artist: string;
   } | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
@@ -164,6 +167,7 @@ export function Space({ creatorId, isStreamer }: any) {
         streamId: mostUpvotedStream.id,
         title: mostUpvotedStream.title,
         extractedId: mostUpvotedStream.extractedId,
+        artist : mostUpvotedStream.artist,
       });
       socket?.send(
         JSON.stringify({
@@ -213,6 +217,7 @@ export function Space({ creatorId, isStreamer }: any) {
               streamId: data.currentStream.id,
               title: data.currentStream.title,
               extractedId: data.currentStream.extractedId,
+              artist: data.currentStream.artist
             };
 
             setCurSong(currentStream);
@@ -375,7 +380,6 @@ export function Space({ creatorId, isStreamer }: any) {
   };
 
   return (
-    
     <div className="flex flex-col min-h-[100dvh] bg-zinc-900 text-white">
       <header className="px-4 lg:px-6 h-14 flex items-center bg-[#e0e0e0] border-b">
         <Link
@@ -414,13 +418,18 @@ export function Space({ creatorId, isStreamer }: any) {
           </Button>
         </nav>
       </header>
-      
+
       <main className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_400px] gap-8 p-8">
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <div>
-              <h3 className="text-xl font-bold text-[#333333]">Song Title</h3>
-              <p className="text-[#333333]">Artist Name</p>
+            <h3 className="text-xl font-bold text-[#ffffff]">
+  {curSong ? curSong.title : 'Song Name'}
+</h3>
+<p className="text-[#ffffff]">
+  {curSong ? '---'+curSong.artist : '---Artist Name'}
+</p>
+
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -440,10 +449,6 @@ export function Space({ creatorId, isStreamer }: any) {
                 />
               </Button>
             )}
-            <Slider
-              className="flex-1 [&>span:first-child]:h-1 [&>span:first-child]:bg-[#757575] [&_[role=slider]]:bg-[#4a90e2] [&_[role=slider]]:w-3 [&_[role=slider]]:h-3 [&_[role=slider]]:border-0 [&>span:first-child_span]:bg-[#4a90e2] [&_[role=slider]:focus-visible]:ring-0 [&_[role=slider]:focus-visible]:ring-offset-0 [&_[role=slider]:focus-visible]:scale-105 [&_[role=slider]:focus-visible]:transition-transform"
-              defaultValue={[40]}
-            />
             <Button variant="ghost" size="icon">
               <Volume2Icon className="h-6 w-6 fill-[#4a90e2]" />
             </Button>
@@ -487,14 +492,6 @@ export function Space({ creatorId, isStreamer }: any) {
                     onReady={onReady}
                     className="mt-4" // Adjust the margin-top to reduce gap
                   />
-                  <div className="flex items-center gap-4 mt-4">
-                    <Button onClick={onPlay} variant="ghost" size="icon">
-                      <PlayIcon className="h-6 w-6 fill-[#4a90e2]" />
-                    </Button>
-                    <Button onClick={onPause} variant="ghost" size="icon">
-                      <PauseIcon className="h-6 w-6 fill-[#4a90e2]" />
-                    </Button>
-                  </div>
                 </BackgroundGradient>
               </div>
             </>
@@ -504,7 +501,6 @@ export function Space({ creatorId, isStreamer }: any) {
         </div>
         <div className="flex flex-col gap-4 overflow-auto max-h-[80vh]">
           <ScrollArea className="flex-1">
-            
             <div className="grid gap-4">
               {songs.map((song, index) => (
                 <div
@@ -540,8 +536,9 @@ export function Space({ creatorId, isStreamer }: any) {
               ))}
             </div>
           </ScrollArea>
-          
         </div>
+        <ShootingStars />
+          <StarsBackground />
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
         <p className="text-xs text-[#d0d0d0]">
