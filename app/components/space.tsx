@@ -512,7 +512,7 @@ export function Space({ creatorId, isStreamer }: any) {
                   className="flex items-center justify-between bg-gradient-to-r from-[#4a90e2] to-[#8e44ad] rounded-md p-4"
                 >
                   <div>
-                    <h4 className="text-lg font-bold text-white">
+                    <h4 className="text-lg px-2 font-bold text-white">
                       {song.title}
                     </h4>
                     {/* <p className="text-[#d0d0d0]">{song.artist}</p> */}

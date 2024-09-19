@@ -90,15 +90,43 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    
+
+      const youtubeApiKey = process.env.YOUTUBE_API_KEY; // Ensure this is in your .env.local
+      const youtubeApiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${extractedId}&key=${youtubeApiKey}`;
+  
+      // Make the API call server-side
+      const youtubeResponse = await fetch(youtubeApiUrl, {
+        method: 'GET',
+      });
+  
+      // Parse the response
+      const youtubeData = await youtubeResponse.json();
+  
+      // Log the response to inspect it
+      console.log('YouTube API snippet:', youtubeData.items[0].snippet);
+  
+      if (youtubeData.error) {
+        return NextResponse.json({ message: 'Error fetching video data' }, { status: 503 });
+      }
+
+    // if (youtubeData.error) {
+    //   return NextResponse.json({ message: 'Error fetching video data' }, { status: 500 });
+    // }
+
     const stream = await prismaClient.stream.create({
       data: {
-        title: "videoDetails.title",
+        title: youtubeData.items[0].snippet.title,
         type,
         url,
         extractedId,
         userId,
+        artist: youtubeData.items[0].snippet.channelTitle,
+        thumbnailUrl: youtubeData.items[0].snippet.thumbnails.default.url
       },
     });
+    
 
     return NextResponse.json({
       message: 'Added stream',

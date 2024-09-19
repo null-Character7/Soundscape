@@ -34,6 +34,8 @@ model Stream {
   timesPlayed   Int             @default(0) // New field to track the number of times played
   playedDate    DateTime?       // New field to track the last played date
   thumbnailUrl  String?          // New field to store the URL of the video thumbnail
+  artist        String?
+  description   String?
 }
 
 enum StreamType {
