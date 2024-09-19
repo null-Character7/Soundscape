@@ -108,7 +108,7 @@ export function Landing() {
                   {session?.user && (
                     <Button
                       onClick={handleRedirect} // Assuming you have a route for "stream"
-                      className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-muted px-8 text-sm font-medium shadow-sm text-black transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg hover:bg-muted-foreground/20 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                      className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-100"
                       >
                       Go to My Space
                     </Button>

@@ -9,39 +9,44 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { PauseIcon } from './Icons';
-import YouTube, { YouTubePlayer } from 'react-youtube';
+import { PauseIcon } from "./Icons";
+import YouTube, { YouTubePlayer } from "react-youtube";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { useCallback } from 'react';
+import { BackgroundBeamsWithCollision } from "./ui/background-beams-with-collision";
+
+import { useCallback } from "react";
 import { useSocket } from "../hooks/useSocket";
+import { BackgroundGradient } from "@/components/ui/background-gradient";
+import Image from "next/image";
+import { TracingBeam } from "./ui/tracing-beams";
 export enum SupportedMessage {
   UpvoteSuccess = "UPVOTE_SUCCESS",
   DownvoteSuccess = "DOWNVOTE_SUCCESS",
   SongAdded = "SONG_ADDED",
-  PlayingNext = "PLAYING_NEXT"
+  PlayingNext = "PLAYING_NEXT",
 }
-
-
-
-
 
 export function Space({ creatorId, isStreamer }: any) {
   const playerRef = useRef<YouTubePlayer | null>(null); // YouTube player reference
   const [newSongUrl, setNewSongUrl] = useState<string>("");
   const [songs, setSongs] = useState<
-    Array<{ streamId: string; title: string; upvotes: number; }>
+    Array<{ streamId: string; title: string; upvotes: number }>
   >([]);
-  const [curSong, setCurSong] = useState<{ streamId: string; title: string; extractedId: string } | null>(null);
+  const [curSong, setCurSong] = useState<{
+    streamId: string;
+    title: string;
+    extractedId: string;
+  } | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
   const socket = useSocket();
   const { data: session, status } = useSession();
-  console.log("session is ",session)
-
+  console.log("session is ", session);
 
   useEffect(() => {
     if (!socket) {
-      console.log("socket nhi mila mkc")
+      console.log("socket nhi mila mkc");
       return;
     }
 
@@ -50,47 +55,47 @@ export function Space({ creatorId, isStreamer }: any) {
       switch (message.type) {
         case SupportedMessage.UpvoteSuccess:
         case SupportedMessage.DownvoteSuccess:
-            // Handle the case where a song's upvote or downvote is successful
-            const updatedStreams = message.payload.streams;
-            // Update your state or UI based on the updated streams
-            console.log('Streams updated:', updatedStreams);
-            setSongs(updatedStreams);
-            break;
-    
+          // Handle the case where a song's upvote or downvote is successful
+          const updatedStreams = message.payload.streams;
+          // Update your state or UI based on the updated streams
+          console.log("Streams updated:", updatedStreams);
+          setSongs(updatedStreams);
+          break;
+
         case SupportedMessage.SongAdded:
-            // Handle the case where a song is added
-            const newStreams = message.payload.streams;
-            // Update your state or UI with the new streams
-            console.log('New streams added:', newStreams);
-            setSongs(newStreams);
-            break;
-    
+          // Handle the case where a song is added
+          const newStreams = message.payload.streams;
+          // Update your state or UI with the new streams
+          console.log("New streams added:", newStreams);
+          setSongs(newStreams);
+          break;
+
         case SupportedMessage.PlayingNext:
-            // Handle the case where the next song is being played
-            const { streams: nextStreams, currentStream } = message.payload;
-            // Update your state or UI with the new streams and current stream
-            console.log('Next song playing:', currentStream);
-            console.log('Updated streams:', nextStreams);
-            setSongs(nextStreams);
-            setCurSong(currentStream);
-            break;
-    
+          // Handle the case where the next song is being played
+          const { streams: nextStreams, currentStream } = message.payload;
+          // Update your state or UI with the new streams and current stream
+          console.log("Next song playing:", currentStream);
+          console.log("Updated streams:", nextStreams);
+          setSongs(nextStreams);
+          setCurSong(currentStream);
+          break;
+
         default:
-            console.error('Unhandled message type:', message.type);
-            break;
+          console.error("Unhandled message type:", message.type);
+          break;
       }
     };
 
     if (socket.readyState === WebSocket.OPEN) {
-      console.log("Connecting from here ",session?.user.id)
+      console.log("Connecting from here ", session?.user.id);
       socket?.send(
         JSON.stringify({
           type: "JOIN_ROOM",
           payload: {
-            userId:session?.user.id,
-            spaceId:creatorId
+            userId: session?.user.id,
+            spaceId: creatorId,
           },
-        }),
+        })
       );
     }
 
@@ -107,15 +112,17 @@ export function Space({ creatorId, isStreamer }: any) {
   // Function to handle copying the link
   const handleShare = useCallback(() => {
     const link = `http://localhost:3000/streams/${hashCreatorId(creatorId)}`;
-    
-    // Copy to clipboard
-    navigator.clipboard.writeText(link).then(() => {
-      console.log("Link copied to clipboard:", link);
-    }).catch((err) => {
-      console.error('Failed to copy link:', err);
-    });
-  }, [creatorId]);
 
+    // Copy to clipboard
+    navigator.clipboard
+      .writeText(link)
+      .then(() => {
+        console.log("Link copied to clipboard:", link);
+      })
+      .catch((err) => {
+        console.error("Failed to copy link:", err);
+      });
+  }, [creatorId]);
 
   const onReady = (event: any) => {
     playerRef.current = event.target;
@@ -131,7 +138,7 @@ export function Space({ creatorId, isStreamer }: any) {
     playerRef.current?.pauseVideo();
   };
   const router = useRouter();
-  
+
   const handlePlayNext = async () => {
     try {
       const response = await fetch("/api/streams/next", {
@@ -141,17 +148,17 @@ export function Space({ creatorId, isStreamer }: any) {
         },
         credentials: "include",
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
       const data = await response.json();
       console.log("Top song is:", data);
-  
+
       // Extract the mostUpvotedStream from the response
       const mostUpvotedStream = data.mostUpvotedStream;
-  
+
       // Update the curSong state
       setCurSong({
         streamId: mostUpvotedStream.id,
@@ -166,15 +173,14 @@ export function Space({ creatorId, isStreamer }: any) {
             spaceId: creatorId,
             streamId: mostUpvotedStream.id,
             extractedId: mostUpvotedStream.extractedId,
-            title: mostUpvotedStream.title
+            title: mostUpvotedStream.title,
           },
-        }),
+        })
       );
-
     } catch (error) {
       console.error("Error getting top song:", error);
     }
-  }
+  };
 
   useEffect(() => {
     const fetchSongs = async () => {
@@ -208,7 +214,7 @@ export function Space({ creatorId, isStreamer }: any) {
               title: data.currentStream.title,
               extractedId: data.currentStream.extractedId,
             };
-          
+
             setCurSong(currentStream);
           }
         } catch (error) {
@@ -260,11 +266,10 @@ export function Space({ creatorId, isStreamer }: any) {
           payload: {
             userId: session?.user.id,
             spaceId: creatorId,
-            streamId: songId
+            streamId: songId,
           },
-        }),
+        })
       );
-      
     } catch (error) {
       console.error("Error upvoting song:", error);
     }
@@ -304,11 +309,10 @@ export function Space({ creatorId, isStreamer }: any) {
           payload: {
             userId: session?.user.id,
             spaceId: creatorId,
-            streamId: songId
+            streamId: songId,
           },
-        }),
+        })
       );
-      
     } catch (error) {
       console.error("Error downvoting song:", error);
     }
@@ -329,16 +333,16 @@ export function Space({ creatorId, isStreamer }: any) {
             url: newSongUrl,
           }),
         });
-  
+
         // Check if the response is OK
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-  
+
         // Parse the JSON response
         const data = await response.json();
         console.log("Stream added:", data);
-  
+
         const newStream = data.stream;
         setSongs((prevSongs) => [
           ...prevSongs,
@@ -349,7 +353,7 @@ export function Space({ creatorId, isStreamer }: any) {
           },
         ]);
         console.log(songs);
-  
+
         // Send the update via WebSocket
         socket?.send(
           JSON.stringify({
@@ -369,9 +373,10 @@ export function Space({ creatorId, isStreamer }: any) {
       setNewSongUrl("");
     }
   };
-  
+
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-gradient-to-r from-[#4a90e2] to-[#8e44ad] text-white">
+    
+    <div className="flex flex-col min-h-[100dvh] bg-zinc-900 text-white">
       <header className="px-4 lg:px-6 h-14 flex items-center bg-[#e0e0e0] border-b">
         <Link
           href="#"
@@ -409,90 +414,97 @@ export function Space({ creatorId, isStreamer }: any) {
           </Button>
         </nav>
       </header>
+      
       <main className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_400px] gap-8 p-8">
-      <div className="flex flex-col gap-4">
-  <div className="flex items-center gap-4">
-    <img
-      src="/placeholder.svg"
-      width="100"
-      height="100"
-      alt="Song Thumbnail"
-      className="rounded-lg"
-      style={{ aspectRatio: "100/100", objectFit: "cover" }}
-    />
-    <div>
-      <h3 className="text-xl font-bold text-[#333333]">Song Title</h3>
-      <p className="text-[#333333]">Artist Name</p>
-    </div>
-  </div>
-  <div className="flex items-center gap-4">
-    {isStreamer && (<Button variant="ghost" size="icon">
-      <PlayIcon onClick={onPause} className="h-6 w-6 fill-[#4a90e2]" />
-    </Button>)}
-    {isStreamer && (
-  <Button variant="ghost" size="icon">
-    <ForwardIcon onClick={handlePlayNext} className="h-6 w-6 fill-[#4a90e2]" />
-  </Button>
-)}
-    <Slider
-      className="flex-1 [&>span:first-child]:h-1 [&>span:first-child]:bg-[#757575] [&_[role=slider]]:bg-[#4a90e2] [&_[role=slider]]:w-3 [&_[role=slider]]:h-3 [&_[role=slider]]:border-0 [&>span:first-child_span]:bg-[#4a90e2] [&_[role=slider]:focus-visible]:ring-0 [&_[role=slider]:focus-visible]:ring-offset-0 [&_[role=slider]:focus-visible]:scale-105 [&_[role=slider]:focus-visible]:transition-transform"
-      defaultValue={[40]}
-    />
-    <Button variant="ghost" size="icon">
-      <Volume2Icon className="h-6 w-6 fill-[#4a90e2]" />
-    </Button>
-  </div>
-  <div className="flex items-center gap-4">
-    <Input
-      type="text"
-      placeholder="Add song URL"
-      value={newSongUrl}
-      onChange={(e) => setNewSongUrl(e.target.value)}
-      className="flex-1 rounded-md border-[#4a90e2] bg-white text-[#d16ba5] px-4 py-2"
-    />
-    <Button
-      onClick={handleAddToQueue}
-      className="px-4 py-2 rounded-md border border-black text-blue-500 bg-black hover:text-white transition-all duration-300 ease-in-out shadow-md"
-    >
-      Add to queue
-    </Button>
-  </div>
-  <div className="flex items-center gap-4 justify-center">
-    {isStreamer && (<Button
-      onClick={() => handlePlayNext()}
-      className="px-6 py-2 rounded-lg border border-black text-blue-500 bg-black hover:text-white transition-all duration-300 ease-in-out shadow-md"
-    >
-      Play Next
-    </Button>)}
-  </div>
-  {curSong ? (
-    <>
-      <YouTube
-        videoId={curSong.extractedId}
-        opts={{
-          height: '390',
-          width: '640',
-          playerVars: { autoplay: 1 }
-        }}
-        onReady={onReady}
-        className="mt-4"  // Adjust the margin-top to reduce gap
-      />
-      <div className="flex items-center gap-4 mt-4">
-        <Button onClick={onPlay} variant="ghost" size="icon">
-          <PlayIcon className="h-6 w-6 fill-[#4a90e2]" />
-        </Button>
-        <Button onClick={onPause} variant="ghost" size="icon">
-          <PauseIcon className="h-6 w-6 fill-[#4a90e2]" />
-        </Button>
-      </div>
-    </>
-  ) : (
-    <p>No song playing</p>
-  )}
-</div>
-
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-4">
+            <div>
+              <h3 className="text-xl font-bold text-[#333333]">Song Title</h3>
+              <p className="text-[#333333]">Artist Name</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            {isStreamer && (
+              <Button variant="ghost" size="icon">
+                <PlayIcon
+                  onClick={onPause}
+                  className="h-6 w-6 fill-[#4a90e2]"
+                />
+              </Button>
+            )}
+            {isStreamer && (
+              <Button variant="ghost" size="icon">
+                <ForwardIcon
+                  onClick={handlePlayNext}
+                  className="h-6 w-6 fill-[#4a90e2]"
+                />
+              </Button>
+            )}
+            <Slider
+              className="flex-1 [&>span:first-child]:h-1 [&>span:first-child]:bg-[#757575] [&_[role=slider]]:bg-[#4a90e2] [&_[role=slider]]:w-3 [&_[role=slider]]:h-3 [&_[role=slider]]:border-0 [&>span:first-child_span]:bg-[#4a90e2] [&_[role=slider]:focus-visible]:ring-0 [&_[role=slider]:focus-visible]:ring-offset-0 [&_[role=slider]:focus-visible]:scale-105 [&_[role=slider]:focus-visible]:transition-transform"
+              defaultValue={[40]}
+            />
+            <Button variant="ghost" size="icon">
+              <Volume2Icon className="h-6 w-6 fill-[#4a90e2]" />
+            </Button>
+          </div>
+          <div className="flex items-center gap-4">
+            <Input
+              type="text"
+              placeholder="Add song URL"
+              value={newSongUrl}
+              onChange={(e) => setNewSongUrl(e.target.value)}
+              className="flex-1 rounded-md border-[#4a90e2] bg-white text-[#d16ba5] px-4 py-2"
+            />
+            <Button
+              onClick={handleAddToQueue}
+              className="px-4 py-2 rounded-md border border-black text-blue-500 bg-black hover:text-white transition-all duration-300 ease-in-out shadow-md"
+            >
+              Add to queue
+            </Button>
+          </div>
+          <div className="flex items-center gap-4 justify-center">
+            {isStreamer && (
+              <Button
+                onClick={() => handlePlayNext()}
+                className="px-6 py-2 rounded-lg border border-black text-blue-500 bg-black hover:text-white transition-all duration-300 ease-in-out shadow-md"
+              >
+                Play Next
+              </Button>
+            )}
+          </div>
+          {curSong ? (
+            <>
+              <div className="w-9/12">
+                <BackgroundGradient className="rounded-[22px] p-4 sm:p-10 bg-zinc-900">
+                  <YouTube
+                    videoId={curSong.extractedId}
+                    opts={{
+                      height: "390",
+                      width: "640",
+                      playerVars: { autoplay: 1 },
+                    }}
+                    onReady={onReady}
+                    className="mt-4" // Adjust the margin-top to reduce gap
+                  />
+                  <div className="flex items-center gap-4 mt-4">
+                    <Button onClick={onPlay} variant="ghost" size="icon">
+                      <PlayIcon className="h-6 w-6 fill-[#4a90e2]" />
+                    </Button>
+                    <Button onClick={onPause} variant="ghost" size="icon">
+                      <PauseIcon className="h-6 w-6 fill-[#4a90e2]" />
+                    </Button>
+                  </div>
+                </BackgroundGradient>
+              </div>
+            </>
+          ) : (
+            <p>No song playing</p>
+          )}
+        </div>
         <div className="flex flex-col gap-4 overflow-auto max-h-[80vh]">
           <ScrollArea className="flex-1">
+            
             <div className="grid gap-4">
               {songs.map((song, index) => (
                 <div
@@ -528,6 +540,7 @@ export function Space({ creatorId, isStreamer }: any) {
               ))}
             </div>
           </ScrollArea>
+          
         </div>
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
