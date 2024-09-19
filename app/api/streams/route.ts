@@ -105,7 +105,6 @@ export async function POST(req: NextRequest) {
       const youtubeData = await youtubeResponse.json();
   
       // Log the response to inspect it
-      console.log('YouTube API snippet:', youtubeData.items[0].snippet);
   
       if (youtubeData.error) {
         return NextResponse.json({ message: 'Error fetching video data' }, { status: 503 });

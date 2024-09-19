@@ -18,52 +18,12 @@ interface Stream {
   artist: string | null;
   description: string | null;
 }
+type StreamlistProps = {
+  cards: any[]; // You can replace 'any[]' with the proper type if you have the exact structure
+};
 
-export function Streamlist() {
-  const [streams, setStreams] = useState<Stream[]>([]);
-  const [cards, setCards] = useState<any[]>([]); // Update this type based on your card structure
-
-  useEffect(() => {
-    const fetchStreams = async () => {
-      try {
-        const response = await fetch("/api/profile/streams", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        });
+export function Streamlist({ cards }: StreamlistProps) {
   
-        if (!response.ok) {
-          throw new Error('Failed to fetch streams');
-        }
-  
-        const data = await response.json(); // Type the fetched data
-        setStreams(data.streams); // Update streams state
-        console.log(data.streams);
-  
-        // Map streams to cards
-        const newCards = data.streams.map((stream: Stream) => ({
-          title: stream.title,
-          description: stream.artist || 'Unknown Artist',
-          src: stream.thumbnailUrl || '', // You can set a default thumbnail URL if needed
-          ctaText: 'Play',
-          ctaLink: stream.url,
-          content: () => (
-            <p>
-              {stream.description || 'No description available.'}
-            </p>
-          ),
-        }));
-  
-        setCards(newCards); // Update cards state
-      } catch (err) {
-        console.error(err);
-      }
-    };
-  
-    fetchStreams();
-  }, []); // Empty dependency array ensures this runs once on mount
 
   const [active, setActive] = useState<(typeof cards)[number] | boolean | null>(
     null

@@ -6,20 +6,87 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Music, ThumbsUp, Users, Headphones, Award, Mic2 } from "lucide-react"
 import { Streamlist } from "./Streamlist"
+import { useEffect, useState } from "react"
+
+interface Stream {
+  id: string;
+  type: string; // You can replace this with the actual type if you have a StreamType enum
+  url: string;
+  extractedId: string;
+  title: string;
+  active: boolean;
+  userId: string;
+  timesPlayed: number;
+  playedDate: string | null;
+  thumbnailUrl: string | null;
+  artist: string | null;
+  description: string | null;
+}
 
 export function Profile() {
+  const [songsPlayed,setSongsPlayed] = useState<number>(0);
+  const [totalUpvotes,setTotalUpvotes] = useState<number>(0);
+  const [username,setUsername] = useState<string>('');
+  const [userId,setUserId] = useState<string>('');
+  const [streams, setStreams] = useState<Stream[]>([]);
+  const [cards, setCards] = useState<any[]>([]); // Update this type based on your card structure
 
   const streamer = {
-    name: "DJ Cosmic",
-    username: "cosmic_beats",
+    name: username,
+    username: userId,
     avatar: "/placeholder.svg?height=100&width=100",
-    songsPlayed: 1500,
-    totalUpvotes: 75000,
+    songsPlayed: songsPlayed,
+    totalUpvotes: totalUpvotes,
     followers: 10000,
     hoursStreamed: 500,
     topGenre: "Electronic",
     achievements: ["Top 100 Streamer", "1M Total Listeners", "24 Hour Stream"]
   }
+  useEffect(() => {
+    const fetchStreams = async () => {
+      try {
+        const response = await fetch("/api/profile/streams", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to fetch streams');
+        }
+  
+        const data = await response.json(); // Type the fetched data
+        setStreams(data.streams); // Update streams state
+        console.log(data.streams);
+        setSongsPlayed(data.numberOfStreams);
+        setTotalUpvotes(data.totalUpvotes);
+        setUserId(data.userId);
+        setUsername(data.username)
+  
+        // Map streams to cards
+        const newCards = data.streams.map((stream: Stream) => ({
+          title: stream.title,
+          description: stream.artist || 'Unknown Artist',
+          src: stream.thumbnailUrl || '', // You can set a default thumbnail URL if needed
+          ctaText: 'Play',
+          ctaLink: stream.url,
+          content: () => (
+            <p>
+              {stream.description || 'No description available.'}
+            </p>
+          ),
+        }));
+  
+        setCards(newCards); // Update cards state
+      } catch (err) {
+        console.error(err);
+      }
+    };
+  
+    fetchStreams();
+  }, []); // Empty dependency array ensures this runs once on mount
 
   const stats = [
     { title: "Songs Played", value: streamer.songsPlayed, icon: Music, color: "text-blue-400", progress: 75 },
@@ -86,17 +153,17 @@ export function Profile() {
                 <CardTitle>Recent Streams</CardTitle>
               </CardHeader>
               <CardContent>
-                <Streamlist />
+                <Streamlist cards={cards}/>
               </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="about">
             <Card className="bg-gray-800 border-gray-700">
               <CardHeader>
-                <CardTitle>About DJ Cosmic</CardTitle>
+                <CardTitle>About {username}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p>DJ Cosmic is an electronic music producer and streamer known for his energetic sets and interactive streams. With a passion for blending various electronic sub-genres, he creates a unique experience for his listeners.</p>
+                <p>{username} is an electronic music producer and streamer known for his energetic sets and interactive streams. With a passion for blending various electronic sub-genres, he creates a unique experience for his listeners.</p>
               </CardContent>
             </Card>
           </TabsContent>

@@ -381,43 +381,6 @@ export function Space({ creatorId, isStreamer }: any) {
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-zinc-900 text-white">
-      <header className="px-4 lg:px-6 h-14 flex items-center bg-[#e0e0e0] border-b">
-        <Link
-          href="#"
-          className="flex items-center justify-center"
-          prefetch={false}
-        >
-          <Music2Icon className="h-6 w-6 fill-[#4a90e2]" />
-          <span className="sr-only">Soundscape</span>
-        </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
-          <Button
-            variant="ghost"
-            className="px-4 py-2 rounded-md hover:bg-[#d0d0d0]/10"
-          >
-            Explore
-          </Button>
-          <Button
-            variant="ghost"
-            className="px-4 py-2 rounded-md hover:bg-[#d0d0d0]/10"
-          >
-            My Spaces
-          </Button>
-          <Button
-            variant="ghost"
-            className="px-4 py-2 rounded-md hover:bg-[#d0d0d0]/10"
-          >
-            Settings
-          </Button>
-          <Button
-            variant="outline"
-            className="px-4 py-2 rounded-md border-[#c5335f] text-[#ff3333]"
-          >
-            <LogInIcon className="h-4 w-4 mr-2 fill-[#d72f86]" />
-            Log Out
-          </Button>
-        </nav>
-      </header>
 
       <main className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_400px] gap-8 p-8">
         <div className="flex flex-col gap-4">
