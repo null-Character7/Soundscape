@@ -123,7 +123,8 @@ export async function POST(req: NextRequest) {
         extractedId,
         userId,
         artist: youtubeData.items[0].snippet.channelTitle,
-        thumbnailUrl: youtubeData.items[0].snippet.thumbnails.default.url
+        thumbnailUrl: youtubeData.items[0].snippet.thumbnails.default.url,
+        description: youtubeData.items[0].snippet.description.trim().slice(0, 100) + '...'
       },
     });
     

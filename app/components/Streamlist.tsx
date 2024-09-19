@@ -4,7 +4,67 @@ import React, { useEffect, useId, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useOutsideClick } from "../hooks/use-outside-click";
 
-export function ExpandableCardDemo() {
+interface Stream {
+  id: string;
+  type: string; // You can replace this with the actual type if you have a StreamType enum
+  url: string;
+  extractedId: string;
+  title: string;
+  active: boolean;
+  userId: string;
+  timesPlayed: number;
+  playedDate: string | null;
+  thumbnailUrl: string | null;
+  artist: string | null;
+  description: string | null;
+}
+
+export function Streamlist() {
+  const [streams, setStreams] = useState<Stream[]>([]);
+  const [cards, setCards] = useState<any[]>([]); // Update this type based on your card structure
+
+  useEffect(() => {
+    const fetchStreams = async () => {
+      try {
+        const response = await fetch("/api/profile/streams", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to fetch streams');
+        }
+  
+        const data = await response.json(); // Type the fetched data
+        setStreams(data.streams); // Update streams state
+        console.log(data.streams);
+  
+        // Map streams to cards
+        const newCards = data.streams.map((stream: Stream) => ({
+          title: stream.title,
+          description: stream.artist || 'Unknown Artist',
+          src: stream.thumbnailUrl || '', // You can set a default thumbnail URL if needed
+          ctaText: 'Play',
+          ctaLink: stream.url,
+          content: () => (
+            <p>
+              {stream.description || 'No description available.'}
+            </p>
+          ),
+        }));
+  
+        setCards(newCards); // Update cards state
+      } catch (err) {
+        console.error(err);
+      }
+    };
+  
+    fetchStreams();
+  }, []); // Empty dependency array ensures this runs once on mount
+
   const [active, setActive] = useState<(typeof cards)[number] | boolean | null>(
     null
   );
@@ -204,116 +264,3 @@ export const CloseIcon = () => {
   );
 };
 
-const cards = [
-  {
-    description: "Lana Del Rey",
-    title: "Summertime Sadness",
-    src: "",
-    ctaText: "Play",
-    ctaLink: "https://ui.aceternity.com/templates",
-    content: () => {
-      return (
-        <p>
-          Lana Del Rey, an iconic American singer-songwriter, is celebrated for
-          her melancholic and cinematic music style. Born Elizabeth Woolridge
-          Grant in New York City, she has captivated audiences worldwide with
-          her haunting voice and introspective lyrics. <br /> <br /> Her songs
-          often explore themes of tragic romance, glamour, and melancholia,
-          drawing inspiration from both contemporary and vintage pop culture.
-          With a career that has seen numerous critically acclaimed albums, Lana
-          Del Rey has established herself as a unique and influential figure in
-          the music industry, earning a dedicated fan base and numerous
-          accolades.
-        </p>
-      );
-    },
-  },
-  {
-    description: "Babbu Maan",
-    title: "Mitran Di Chhatri",
-    src: "",
-    ctaText: "Play",
-    ctaLink: "https://ui.aceternity.com/templates",
-    content: () => {
-      return (
-        <p>
-          Babu Maan, a legendary Punjabi singer, is renowned for his soulful
-          voice and profound lyrics that resonate deeply with his audience. Born
-          in the village of Khant Maanpur in Punjab, India, he has become a
-          cultural icon in the Punjabi music industry. <br /> <br /> His songs
-          often reflect the struggles and triumphs of everyday life, capturing
-          the essence of Punjabi culture and traditions. With a career spanning
-          over two decades, Babu Maan has released numerous hit albums and
-          singles that have garnered him a massive fan following both in India
-          and abroad.
-        </p>
-      );
-    },
-  },
-
-  {
-    description: "Metallica",
-    title: "For Whom The Bell Tolls",
-    src: "",
-    ctaText: "Play",
-    ctaLink: "https://ui.aceternity.com/templates",
-    content: () => {
-      return (
-        <p>
-          Metallica, an iconic American heavy metal band, is renowned for their
-          powerful sound and intense performances that resonate deeply with
-          their audience. Formed in Los Angeles, California, they have become a
-          cultural icon in the heavy metal music industry. <br /> <br /> Their
-          songs often reflect themes of aggression, social issues, and personal
-          struggles, capturing the essence of the heavy metal genre. With a
-          career spanning over four decades, Metallica has released numerous hit
-          albums and singles that have garnered them a massive fan following
-          both in the United States and abroad.
-        </p>
-      );
-    },
-  },
-  {
-    description: "Led Zeppelin",
-    title: "Stairway To Heaven",
-    src: "",
-    ctaText: "Play",
-    ctaLink: "https://ui.aceternity.com/templates",
-    content: () => {
-      return (
-        <p>
-          Led Zeppelin, a legendary British rock band, is renowned for their
-          innovative sound and profound impact on the music industry. Formed in
-          London in 1968, they have become a cultural icon in the rock music
-          world. <br /> <br /> Their songs often reflect a blend of blues, hard
-          rock, and folk music, capturing the essence of the 1970s rock era.
-          With a career spanning over a decade, Led Zeppelin has released
-          numerous hit albums and singles that have garnered them a massive fan
-          following both in the United Kingdom and abroad.
-        </p>
-      );
-    },
-  },
-  {
-    description: "Mustafa Zahid",
-    title: "Toh Phir Aao",
-    src: "",
-    ctaText: "Play",
-    ctaLink: "https://ui.aceternity.com/templates",
-    content: () => {
-      return (
-        <p>
-          &quot;Aawarapan&quot;, a Bollywood movie starring Emraan Hashmi, is
-          renowned for its intense storyline and powerful performances. Directed
-          by Mohit Suri, the film has become a significant work in the Indian
-          film industry. <br /> <br /> The movie explores themes of love,
-          redemption, and sacrifice, capturing the essence of human emotions and
-          relationships. With a gripping narrative and memorable music,
-          &quot;Aawarapan&quot; has garnered a massive fan following both in
-          India and abroad, solidifying Emraan Hashmi&apos;s status as a
-          versatile actor.
-        </p>
-      );
-    },
-  },
-];

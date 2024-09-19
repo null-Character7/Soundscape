@@ -1,12 +1,14 @@
+"use client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Music, ThumbsUp, Users, Headphones, Award, Mic2 } from "lucide-react"
-import { ExpandableCardDemo } from "./Streamlist"
+import { Streamlist } from "./Streamlist"
 
 export function Profile() {
+
   const streamer = {
     name: "DJ Cosmic",
     username: "cosmic_beats",
@@ -84,7 +86,7 @@ export function Profile() {
                 <CardTitle>Recent Streams</CardTitle>
               </CardHeader>
               <CardContent>
-                <ExpandableCardDemo />
+                <Streamlist />
               </CardContent>
             </Card>
           </TabsContent>
