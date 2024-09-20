@@ -4,7 +4,7 @@ import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { Music2Icon, LogInIcon } from "lucide-react";
 import { Button } from "../../components/ui/button"; // Ensure correct path to your Button component
-import { IconHome, IconSpace, IconUser } from "@tabler/icons-react";
+import { IconHome, IconSpace, IconUser } from "../../node_modules/@tabler/icons-react/dist/esm/tabler-icons-react";
 
 const IconButton = ({ icon, name, href }: { icon: React.ReactNode; name: string; href: string }) => {
   return (

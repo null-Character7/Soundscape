@@ -2,18 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { ScrollArea } from "../../components/ui/scroll-area";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { PauseIcon } from "./Icons";
 import YouTube, { YouTubePlayer } from "react-youtube";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { BackgroundBeamsWithCollision } from "./ui/background-beams-with-collision";
 
 import { useCallback } from "react";
 import { useSocket } from "../hooks/useSocket";

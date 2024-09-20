@@ -2,18 +2,15 @@
 
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import Image from "next/image";
-import hero from "../images/hero.jpg";
-import { FaGoogle } from "react-icons/fa";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import { useRouter } from "next/navigation";
 import { WobbleCard } from "./ui/wobble-card";
 import { CardBody, CardContainer, CardItem } from "./ui/3d-card";
 import { AuroraBackground } from "./ui/aurora-background";
 import { motion } from "framer-motion";
 import { BackgroundGradientAnimation } from "./ui/background-gradient-animation";
-import { IconBrandGoogle } from "@tabler/icons-react";
+import { IconBrandGoogle } from "../../node_modules/@tabler/icons-react/dist/esm/tabler-icons-react";
 
 export function Landing() {
   const { data: session } = useSession();
