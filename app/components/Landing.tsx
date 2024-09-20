@@ -12,6 +12,8 @@ import { WobbleCard } from "./ui/wobble-card";
 import { CardBody, CardContainer, CardItem } from "./ui/3d-card";
 import { AuroraBackground } from "./ui/aurora-background";
 import { motion } from "framer-motion";
+import { BackgroundGradientAnimation } from "./ui/background-gradient-animation";
+import { IconBrandGoogle } from "@tabler/icons-react";
 
 export function Landing() {
   const { data: session } = useSession();
@@ -31,68 +33,30 @@ export function Landing() {
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-background text-foreground">
-      
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-[#FF6B6B] to-[#FFA500]">
-          <div className="container px-4 md:px-6 text-primary-foreground">
-            <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-              <div className="flex flex-col justify-center space-y-4">
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
-                    Soundscape: Your Personal Music Hub
-                  </h1>
-                  <p className="max-w-[600px] text-primary-foreground/80 md:text-xl">
-                    Create your own music space, add your favorite songs, and
-                    let your friends contribute to the vibe.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  {!session?.user && (
-                    <Button
-                      onClick={() => signIn("google")}
-                      className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-100"
-                      >
-                      <FaGoogle className="h-4 w-4 mr-2" />
-                      Sign Up with Google
-                    </Button>
-                  )}
-
-                  {session?.user && (
-                    <Button
-                      onClick={handleRedirect} // Assuming you have a route for "stream"
-                      className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg hover:bg-black hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-100"
-                      >
-                      Go to My Space
-                    </Button>
-                  )}
-
-                  <Button
-                    variant="outline"
-                    className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-muted px-8 text-sm font-medium shadow-sm text-black transition-colors hover:bg-muted-foreground/10 hover:text-black focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                  >
-                    Learn More
-                  </Button>
-                </div>
-              </div>
-              <div className="flex justify-center">
-                <div className="flex justify-center">
-                  <Image
-                    src={hero} // Use the imported image here
-                    width="650"
-                    height="650"
-                    alt="Hero"
-                    className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last lg:aspect-square"
-                  />
-                </div>
-              </div>
+        <BackgroundGradientAnimation>
+          {/* Main Content */}
+          <div className="absolute z-50 inset-0 flex items-center justify-center text-white font-bold px-4 pointer-events-none text-3xl text-center md:text-4xl lg:text-7xl">
+            <div className="space-y-2 text-center">
+              {/* Title */}
+              <h1 className="bg-clip-text text-transparent drop-shadow-2xl bg-gradient-to-b from-white/80 to-white/20">
+                Soundscape: Your Personal Music Hub
+              </h1>
+              {/* Subtitle */}
+              <p className="p-5 max-w-[600px] text-primary-foreground/80 md:text-xl mx-auto">
+                Create your own music space, add your favorite songs, and let
+                your friends contribute to the vibe.
+              </p>
             </div>
           </div>
-        </section>
-        <section className="w-full py-4 md:py-6 lg:py-12 bg-[#FFCDD2]">
-          <div className="container px-4 md:px-6">
-            <div className="mx-auto grid max-w-5xl items-center gap-6 py-0 lg:grid-cols-2 lg:gap-12">
-              <CardContainer className="inter-var">
-                <CardBody className="bg-zinc-900 relative group/card dark:hover:shadow-2xl dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto sm:w-[30rem] h-auto rounded-xl p-10 border">
+        </BackgroundGradientAnimation>
+
+        <section className="w-full py-4 md:py-6 lg:py-12 bg-zinc-900">
+          <div className="mx-auto flex flex-col items-center max-w-5xl gap-6 py-0">
+            {/* Cards Section */}
+            <div className="flex gap-6 justify-center">
+              <CardContainer className="inter-var flex-1">
+                <CardBody className="bg-zinc-900 relative group/card dark:hover:shadow-2xl dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto h-auto rounded-xl p-10 border">
                   <CardItem
                     as="p"
                     translateZ="60"
@@ -131,8 +95,9 @@ export function Landing() {
                   </div>
                 </CardBody>
               </CardContainer>
-              <CardContainer className="inter-var">
-                <CardBody className="bg-zinc-900 relative group/card dark:hover:shadow-2xl dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto sm:w-[30rem] h-auto rounded-xl p-10 border">
+
+              <CardContainer className="inter-var flex-1">
+                <CardBody className="bg-zinc-900 relative group/card dark:hover:shadow-2xl dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-auto h-auto rounded-xl p-10 border">
                   <CardItem
                     as="h2"
                     translateZ="50"
@@ -171,6 +136,48 @@ export function Landing() {
                   </div>
                 </CardBody>
               </CardContainer>
+            </div>
+
+            {/* Sign Up with Google button */}
+
+            <div className="flex justify-center">
+              <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center">
+                {!session?.user && (
+                  <motion.button
+                    className="relative group/btn flex space-x-2 items-center justify-start px-6 w-full text-black rounded-md h-12 font-medium shadow-input bg-gray-50 dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_var(--neutral-800)]"
+                    type="button" // Changed to "button" to avoid form submission
+                    onClick={() => signIn("google")}
+                    initial={{ opacity: 0, y: 20 }} // Start hidden and below
+                    animate={{ opacity: 1, y: 0 }} // Animate to visible position
+                    transition={{ duration: 0.3 }} // Animation duration
+                  >
+                    <IconBrandGoogle className="h-5 w-5 text-neutral-800 dark:text-neutral-300" />
+                    <span className="text-neutral-700 dark:text-neutral-300 text-sm">
+                      Continue With Google
+                    </span>
+                    <BottomGradient />
+                  </motion.button>
+                )}
+
+                {session?.user && (
+                  <motion.button
+                    className="relative group/btn flex space-x-2 items-center justify-start px-6 w-full text-black rounded-md h-12 font-medium shadow-input bg-gray-50 dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_var(--neutral-800)]"
+                    type="button" // Changed to "button" to avoid form submission
+                    onClick={(e) => {
+                      e.preventDefault();
+                      router.push("/streams");
+                    }}
+                    initial={{ opacity: 0, y: 20 }} // Start hidden and below
+                    animate={{ opacity: 1, y: 0 }} // Animate to visible position
+                    transition={{ duration: 0.3 }} // Animation duration
+                  >
+                    <span className="text-neutral-700 dark:text-neutral-300 text-sm">
+                      Go to My Space
+                    </span>
+                    <BottomGradient />
+                  </motion.button>
+                )}
+              </div>
             </div>
           </div>
         </section>
@@ -296,3 +303,14 @@ function LogInIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+const BottomGradient = () => {
+  return (
+    <>
+      {/* Main gradient line */}
+      <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
+      {/* Secondary gradient line with a larger width */}
+      <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-3/4 mx-auto -bottom-px inset-x-6 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
+    </>
+  );
+};
