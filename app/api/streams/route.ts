@@ -6,7 +6,6 @@ import { getServerSession } from "next-auth/next";
 import axios from 'axios';
 
 
-const YTapiKey = process.env.YOUTUBE_API_KEY; // Ensure this is set in your environment variables
 
 // Input validation schema
 const streamSchema = z.object({
@@ -122,8 +121,8 @@ export async function POST(req: NextRequest) {
         extractedId,
         userId,
         artist: youtubeData.items[0].snippet.channelTitle,
-        thumbnailUrl: youtubeData.items[0].snippet.thumbnails.default.url,
-        description: youtubeData.items[0].snippet.description.trim().slice(0, 100) + '...'
+        thumbnailUrl: youtubeData.items[0].snippet.thumbnails.maxres.url,
+        description: youtubeData.items[0].snippet.description.trim().slice(0, 100) + '...',
       },
     });
     

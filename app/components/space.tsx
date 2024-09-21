@@ -19,6 +19,7 @@ import Image from "next/image";
 import { TracingBeam } from "./ui/tracing-beams";
 import { ShootingStars } from "./ui/shooting-stars";
 import { StarsBackground } from "./ui/stars-background";
+import { useToast } from "@/hooks/use-toast";
 export enum SupportedMessage {
   UpvoteSuccess = "UPVOTE_SUCCESS",
   DownvoteSuccess = "DOWNVOTE_SUCCESS",
@@ -27,6 +28,7 @@ export enum SupportedMessage {
 }
 
 export function Space({ creatorId, isStreamer }: any) {
+  const { toast } = useToast()
   const playerRef = useRef<YouTubePlayer | null>(null); // YouTube player reference
   const [newSongUrl, setNewSongUrl] = useState<string>("");
   const [songs, setSongs] = useState<
@@ -42,7 +44,6 @@ export function Space({ creatorId, isStreamer }: any) {
   const audioRef = useRef(null);
   const socket = useSocket();
   const { data: session, status } = useSession();
-  console.log("session is ", session);
 
   useEffect(() => {
     if (!socket) {
@@ -118,8 +119,15 @@ export function Space({ creatorId, isStreamer }: any) {
       .writeText(link)
       .then(() => {
         console.log("Link copied to clipboard:", link);
+        toast({
+          title: "Link copied to clipboard",
+        })
       })
       .catch((err) => {
+        toast({
+          title: "Uh-oh! 🚧",
+          description: "Something's broken in the background. We’re on it!",
+        });
         console.error("Failed to copy link:", err);
       });
   }, [creatorId]);
@@ -164,7 +172,7 @@ export function Space({ creatorId, isStreamer }: any) {
         streamId: mostUpvotedStream.id,
         title: mostUpvotedStream.title,
         extractedId: mostUpvotedStream.extractedId,
-        artist : mostUpvotedStream.artist,
+        artist: mostUpvotedStream.artist,
       });
       socket?.send(
         JSON.stringify({
@@ -179,6 +187,10 @@ export function Space({ creatorId, isStreamer }: any) {
         })
       );
     } catch (error) {
+      toast({
+        title: "Uh-oh! 🚧",
+        description: "Something's broken in the background. We’re on it!",
+      });
       console.error("Error getting top song:", error);
     }
   };
@@ -214,12 +226,16 @@ export function Space({ creatorId, isStreamer }: any) {
               streamId: data.currentStream.id,
               title: data.currentStream.title,
               extractedId: data.currentStream.extractedId,
-              artist: data.currentStream.artist
+              artist: data.currentStream.artist,
             };
 
             setCurSong(currentStream);
           }
         } catch (error) {
+          toast({
+            title: "Uh-oh! 🚧",
+            description: "Something's broken in the background. We’re on it!",
+          });
           console.error("Error fetching songs:", error);
         }
       } else if (status === "unauthenticated") {
@@ -253,6 +269,10 @@ export function Space({ creatorId, isStreamer }: any) {
       });
 
       if (!response.ok) {
+        toast({
+          title: "Uh-oh! 🚧",
+          description: "Something's broken in the background. We’re on it!",
+        });
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
@@ -272,7 +292,17 @@ export function Space({ creatorId, isStreamer }: any) {
           },
         })
       );
-    } catch (error) {
+      // );
+      toast({
+        title: "🎉 Woohoo! Upvoted",
+        description: `${songs[index].title.split(" ").slice(0, 4).join(" ")}${songs[index].title.split(" ").length > 4 ? "..." : ""} just climbed the charts!`
+      });
+    }
+    catch (error) {
+      toast({
+        title: "Uh-oh! 🚧",
+        description: "Something's broken in the background. We’re on it!",
+      });
       console.error("Error upvoting song:", error);
     }
   };
@@ -293,6 +323,10 @@ export function Space({ creatorId, isStreamer }: any) {
       });
 
       if (!response.ok) {
+        toast({
+          title: "Uh-oh! 🚧",
+          description: "Something's broken in the background. We’re on it!",
+        });
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
@@ -315,7 +349,15 @@ export function Space({ creatorId, isStreamer }: any) {
           },
         })
       );
+      toast({
+        title: "👎 Ouch! Downvoted",
+        description: `You really didn't like ${songs[index].title.split(" ").slice(0, 4).join(" ")}${songs[index].title.split(" ").length > 4 ? "..." : ""} , huh?`
+      });
     } catch (error) {
+      toast({
+        title: "Uh-oh! 🚧",
+        description: "Something's broken in the background. We’re on it!",
+      });
       console.error("Error downvoting song:", error);
     }
   };
@@ -369,8 +411,16 @@ export function Space({ creatorId, isStreamer }: any) {
             },
           })
         );
+        toast({
+          title: "🎶 Awesome!",
+          description: `"${newStream.title}" has been added to the queue!`
+        });
       } catch (error) {
         console.error("Error adding stream:", error);
+        toast({
+          title: "Uh-oh! 🚧",
+          description: "Something's broken in the background. We’re on it!",
+        });
       }
       setNewSongUrl("");
     }
@@ -378,18 +428,16 @@ export function Space({ creatorId, isStreamer }: any) {
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-zinc-900 text-white">
-
       <main className="flex-1 grid grid-cols-1 md:grid-cols-[1fr_400px] gap-8 p-8">
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <div>
-            <h3 className="text-xl font-bold text-[#ffffff]">
-  {curSong ? curSong.title : 'Song Name'}
-</h3>
-<p className="text-[#ffffff]">
-  {curSong ? '---'+curSong.artist : '---Artist Name'}
-</p>
-
+              <h3 className="text-xl font-bold text-[#ffffff]">
+                {curSong ? curSong.title : "Song Name"}
+              </h3>
+              <p className="text-[#ffffff]">
+                {curSong ? "---" + curSong.artist : "---Artist Name"}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -498,7 +546,7 @@ export function Space({ creatorId, isStreamer }: any) {
           </ScrollArea>
         </div>
         <ShootingStars />
-          <StarsBackground />
+        <StarsBackground />
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
         <p className="text-xs text-[#d0d0d0]">

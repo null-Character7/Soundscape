@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "./provider";
 import {Header} from "./components/Header"; // Ensure the path to Header component is correct
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,6 +22,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           <Header /> {/* Add the Header component here */}
+          <Toaster />
           {children}
         </Providers>
       </body>
