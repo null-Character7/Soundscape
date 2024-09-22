@@ -183,6 +183,7 @@ export function Space({ creatorId, isStreamer }: any) {
             streamId: mostUpvotedStream.id,
             extractedId: mostUpvotedStream.extractedId,
             title: mostUpvotedStream.title,
+            artist: mostUpvotedStream.artist
           },
         })
       );

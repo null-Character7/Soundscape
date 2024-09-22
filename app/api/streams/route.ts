@@ -83,6 +83,7 @@ export async function POST(req: NextRequest) {
 
     // Determine stream type and extract ID
     const { type, extractedId } = getStreamTypeAndId(url);
+    console.log("extracted id is ",extractedId)
     if (!extractedId) {
       return NextResponse.json(
         { message: `Invalid ${type} URL` },
@@ -109,10 +110,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ message: 'Error fetching video data' }, { status: 503 });
       }
 
-    // if (youtubeData.error) {
-    //   return NextResponse.json({ message: 'Error fetching video data' }, { status: 500 });
-    // }
-
     const stream = await prismaClient.stream.create({
       data: {
         title: youtubeData.items[0].snippet.title,
@@ -121,8 +118,11 @@ export async function POST(req: NextRequest) {
         extractedId,
         userId,
         artist: youtubeData.items[0].snippet.channelTitle,
-        thumbnailUrl: youtubeData.items[0].snippet.thumbnails.maxres.url,
-        description: youtubeData.items[0].snippet.description.trim().slice(0, 100) + '...',
+        thumbnailUrl :
+        youtubeData.items[0].snippet.thumbnails.maxres?.url ||
+        youtubeData.items[0].snippet.thumbnails.standard?.url ||
+        youtubeData.items[0].snippet.thumbnails.high?.url ||
+        youtubeData.items[0].snippet.thumbnails.medium?.url  // Fallback to an empty string or some default value if none are available        description: youtubeData.items[0].snippet.description.trim().slice(0, 100) + '...',
       },
     });
     
