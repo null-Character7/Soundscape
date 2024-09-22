@@ -583,12 +583,11 @@ export function Space({ creatorId, isStreamer }: any) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" onClick={handleShare}>
-                  Share
                   <ShareIcon className="h-6 w-6 fill-[#4a90e2]" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Add to library</p>
+                <p>Invite Your friends</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
