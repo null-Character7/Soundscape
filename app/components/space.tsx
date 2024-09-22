@@ -11,7 +11,6 @@ import { useRouter } from "next/navigation";
 import { PauseIcon } from "./Icons";
 import YouTube, { YouTubePlayer } from "react-youtube";
 
-
 import { useCallback } from "react";
 import { useSocket } from "../hooks/useSocket";
 import { BackgroundGradient } from "@/components/ui/background-gradient";
@@ -20,6 +19,12 @@ import { TracingBeam } from "./ui/tracing-beams";
 import { ShootingStars } from "./ui/shooting-stars";
 import { StarsBackground } from "./ui/stars-background";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 export enum SupportedMessage {
   UpvoteSuccess = "UPVOTE_SUCCESS",
   DownvoteSuccess = "DOWNVOTE_SUCCESS",
@@ -28,7 +33,7 @@ export enum SupportedMessage {
 }
 
 export function Space({ creatorId, isStreamer }: any) {
-  const { toast } = useToast()
+  const { toast } = useToast();
   const playerRef = useRef<YouTubePlayer | null>(null); // YouTube player reference
   const [newSongUrl, setNewSongUrl] = useState<string>("");
   const [songs, setSongs] = useState<
@@ -112,7 +117,9 @@ export function Space({ creatorId, isStreamer }: any) {
 
   // Function to handle copying the link
   const handleShare = useCallback(() => {
-    const link = `http://localhost:3000/streams/${hashCreatorId(creatorId)}`;
+    const link = `${process.env.NEXTAUTH_URL}/streams/${hashCreatorId(
+      creatorId
+    )}`;
 
     // Copy to clipboard
     navigator.clipboard
@@ -121,7 +128,7 @@ export function Space({ creatorId, isStreamer }: any) {
         console.log("Link copied to clipboard:", link);
         toast({
           title: "Link copied to clipboard",
-        })
+        });
       })
       .catch((err) => {
         toast({
@@ -183,7 +190,7 @@ export function Space({ creatorId, isStreamer }: any) {
             streamId: mostUpvotedStream.id,
             extractedId: mostUpvotedStream.extractedId,
             title: mostUpvotedStream.title,
-            artist: mostUpvotedStream.artist
+            artist: mostUpvotedStream.artist,
           },
         })
       );
@@ -296,10 +303,11 @@ export function Space({ creatorId, isStreamer }: any) {
       // );
       toast({
         title: "🎉 Woohoo! Upvoted",
-        description: `${songs[index].title.split(" ").slice(0, 4).join(" ")}${songs[index].title.split(" ").length > 4 ? "..." : ""} just climbed the charts!`
+        description: `${songs[index].title.split(" ").slice(0, 4).join(" ")}${
+          songs[index].title.split(" ").length > 4 ? "..." : ""
+        } just climbed the charts!`,
       });
-    }
-    catch (error) {
+    } catch (error) {
       toast({
         title: "Uh-oh! 🚧",
         description: "Something's broken in the background. We’re on it!",
@@ -352,7 +360,12 @@ export function Space({ creatorId, isStreamer }: any) {
       );
       toast({
         title: "👎 Ouch! Downvoted",
-        description: `You really didn't like ${songs[index].title.split(" ").slice(0, 4).join(" ")}${songs[index].title.split(" ").length > 4 ? "..." : ""} , huh?`
+        description: `You really didn't like ${songs[index].title
+          .split(" ")
+          .slice(0, 4)
+          .join(" ")}${
+          songs[index].title.split(" ").length > 4 ? "..." : ""
+        } , huh?`,
       });
     } catch (error) {
       toast({
@@ -414,7 +427,7 @@ export function Space({ creatorId, isStreamer }: any) {
         );
         toast({
           title: "🎶 Awesome!",
-          description: `"${newStream.title}" has been added to the queue!`
+          description: `"${newStream.title}" has been added to the queue!`,
         });
       } catch (error) {
         console.error("Error adding stream:", error);
@@ -487,26 +500,24 @@ export function Space({ creatorId, isStreamer }: any) {
               </Button>
             )}
           </div>
-          {curSong ? (
-            <>
-              <div className="w-9/12">
-                <BackgroundGradient className="rounded-[22px] p-4 sm:p-10 bg-zinc-900">
-                  <YouTube
-                    videoId={curSong.extractedId}
-                    opts={{
-                      height: "390",
-                      width: "640",
-                      playerVars: { autoplay: 1 },
-                    }}
-                    onReady={onReady}
-                    className="mt-4" // Adjust the margin-top to reduce gap
-                  />
-                </BackgroundGradient>
-              </div>
-            </>
-          ) : (
-            <p>No song playing</p>
-          )}
+          <div className="w-9/12">
+            <BackgroundGradient className="rounded-[22px] p-4 sm:p-10 bg-zinc-900">
+              {curSong ? (
+                <YouTube
+                  videoId={curSong.extractedId}
+                  opts={{
+                    height: "390",
+                    width: "640",
+                    playerVars: { autoplay: 1 },
+                  }}
+                  onReady={onReady}
+                  className="mt-4" // Adjust the margin-top to reduce gap
+                />
+              ) : (
+                <p>No song playing</p>
+              )}
+            </BackgroundGradient>
+          </div>
         </div>
         <div className="flex flex-col gap-4 overflow-auto max-h-[80vh]">
           <ScrollArea className="flex-1">
@@ -568,10 +579,19 @@ export function Space({ creatorId, isStreamer }: any) {
           >
             Privacy
           </Link>
-          <Button variant="ghost" size="sm" onClick={handleShare}>
-            <ShareIcon className="h-6 w-6 fill-[#4a90e2]" />
-            <span className="sr-only">Share</span>
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={handleShare}>
+                  Share
+                  <ShareIcon className="h-6 w-6 fill-[#4a90e2]" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Add to library</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </nav>
       </footer>
     </div>
